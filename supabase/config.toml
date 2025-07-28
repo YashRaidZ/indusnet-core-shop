@@ -1,1 +1,7 @@
 project_id = "bxhnxfwrumeqvnpwymin"
+
+[functions.rcon-command]
+verify_jwt = true
+
+[functions.server-status]
+verify_jwt = false

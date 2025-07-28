@@ -5,12 +5,14 @@ import { AuthModals } from "./AuthModals";
 import { CartDrawer } from "./CartDrawer";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserRole } from "@/hooks/useUserRole";
 import { useCart } from "@/contexts/CartContext";
 
 const Navigation = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
   const { user, signOut } = useAuth();
+  const { isAdmin } = useUserRole();
   const { getItemCount } = useCart();
   const navigate = useNavigate();
 
@@ -23,7 +25,8 @@ const Navigation = () => {
     { href: "#features", label: "Features" },
     { href: "#shop", label: "Shop" },
     { href: "#news", label: "News" },
-    { href: "/dashboard", label: "Dashboard", isLink: true }
+    { href: "/dashboard", label: "Dashboard", isLink: true },
+    ...(isAdmin ? [{ href: "/admin", label: "Admin", isLink: true }] : [])
   ];
 
   return (
