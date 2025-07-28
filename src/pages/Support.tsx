@@ -63,16 +63,14 @@ const Support = () => {
 
   const fetchTickets = async () => {
     try {
-      // TODO: Uncomment after support_tickets table is available in types
-      // const { data, error } = await supabase
-      //   .from('support_tickets')
-      //   .select('*')
-      //   .eq('user_id', user?.id)
-      //   .order('created_at', { ascending: false });
+      const { data, error } = await (supabase as any)
+        .from('support_tickets')
+        .select('*')
+        .eq('user_id', user?.id)
+        .order('created_at', { ascending: false });
 
-      // if (error) throw error;
-      // setTickets(data || []);
-      setTickets([]); // Temporary placeholder
+      if (error) throw error;
+      setTickets(data || []);
     } catch (error: any) {
       toast.error('Failed to fetch tickets: ' + error.message);
     } finally {
@@ -86,19 +84,18 @@ const Support = () => {
 
     setSubmitting(true);
     try {
-      // TODO: Uncomment after support_tickets table is available in types
-      // const { error } = await supabase
-      //   .from('support_tickets')
-      //   .insert({
-      //     title: newTicket.title,
-      //     description: newTicket.description,
-      //     category: newTicket.category,
-      //     priority: newTicket.priority,
-      //     status: 'open',
-      //     user_id: user.id
-      //   });
+      const { error } = await (supabase as any)
+        .from('support_tickets')
+        .insert({
+          title: newTicket.title,
+          description: newTicket.description,
+          category: newTicket.category,
+          priority: newTicket.priority,
+          status: 'open',
+          user_id: user.id
+        });
 
-      // if (error) throw error;
+      if (error) throw error;
 
       toast.success('Support ticket submitted successfully!');
       setNewTicket({
