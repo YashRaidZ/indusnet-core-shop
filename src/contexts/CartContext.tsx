@@ -1,7 +1,8 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { useToast } from '@/hooks/use-toast';
+import React, { createContext, useContext } from 'react';
+import { useCartDatabase } from '@/hooks/useCartDatabase';
 
-export interface CartItem {
+// Legacy interface for compatibility (now maps to database structure)
+interface CartItem {
   id: string;
   name: string;
   price: number;
@@ -10,18 +11,22 @@ export interface CartItem {
   quantity: number;
 }
 
+// Context type definition
 interface CartContextType {
   items: CartItem[];
-  addToCart: (item: Omit<CartItem, 'quantity'>) => void;
-  removeFromCart: (id: string) => void;
-  updateQuantity: (id: string, quantity: number) => void;
-  clearCart: () => void;
+  loading: boolean;
+  addToCart: (item: Omit<CartItem, 'quantity'>) => Promise<void>;
+  removeFromCart: (id: string) => Promise<void>;
+  updateQuantity: (id: string, quantity: number) => Promise<void>;
+  clearCart: () => Promise<void>;
   getTotalPrice: () => number;
   getItemCount: () => number;
 }
 
+// Create the context
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
+// Custom hook to use the cart context
 export const useCart = () => {
   const context = useContext(CartContext);
   if (!context) {
@@ -30,79 +35,61 @@ export const useCart = () => {
   return context;
 };
 
+// Provider props interface
 interface CartProviderProps {
-  children: ReactNode;
+  children: React.ReactNode;
 }
 
+// Cart provider component
 export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
-  const [items, setItems] = useState<CartItem[]>([]);
-  const { toast } = useToast();
+  const {
+    items: dbItems,
+    loading,
+    addToCart: dbAddToCart,
+    removeFromCart: dbRemoveFromCart,
+    updateQuantity: dbUpdateQuantity,
+    clearCart: dbClearCart,
+    getTotalPrice,
+    getItemCount,
+  } = useCartDatabase();
 
-  const addToCart = (newItem: Omit<CartItem, 'quantity'>) => {
-    setItems(currentItems => {
-      const existingItem = currentItems.find(item => item.id === newItem.id);
-      
-      if (existingItem) {
-        toast({
-          title: "Updated Cart",
-          description: `${newItem.name} quantity updated in cart`,
-        });
-        return currentItems.map(item =>
-          item.id === newItem.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
-      } else {
-        toast({
-          title: "Added to Cart",
-          description: `${newItem.name} added to your cart`,
-        });
-        return [...currentItems, { ...newItem, quantity: 1 }];
-      }
+  // Transform database items to match legacy interface
+  const items: CartItem[] = dbItems.map(item => ({
+    id: item.id,
+    name: item.product_name,
+    price: item.product_price,
+    category: item.product_category,
+    image: item.product_image,
+    quantity: item.quantity,
+  }));
+
+  // Wrapper functions to transform legacy interface to database format
+  const addToCart = async (item: Omit<CartItem, 'quantity'>) => {
+    await dbAddToCart({
+      product_name: item.name,
+      product_price: item.price,
+      product_category: item.category,
+      product_image: item.image,
     });
   };
 
-  const removeFromCart = (id: string) => {
-    setItems(currentItems => currentItems.filter(item => item.id !== id));
-    toast({
-      title: "Removed from Cart",
-      description: "Item removed from your cart",
-    });
+  const removeFromCart = async (id: string) => {
+    await dbRemoveFromCart(id);
   };
 
-  const updateQuantity = (id: string, quantity: number) => {
-    if (quantity <= 0) {
-      removeFromCart(id);
-      return;
-    }
-    
-    setItems(currentItems =>
-      currentItems.map(item =>
-        item.id === id ? { ...item, quantity } : item
-      )
-    );
+  const updateQuantity = async (id: string, quantity: number) => {
+    await dbUpdateQuantity(id, quantity);
   };
 
-  const clearCart = () => {
-    setItems([]);
-    toast({
-      title: "Cart Cleared",
-      description: "All items removed from cart",
-    });
-  };
-
-  const getTotalPrice = () => {
-    return items.reduce((total, item) => total + (item.price * item.quantity), 0);
-  };
-
-  const getItemCount = () => {
-    return items.reduce((count, item) => count + item.quantity, 0);
+  const clearCart = async () => {
+    await dbClearCart();
   };
 
   return (
     <CartContext.Provider
       value={{
         items,
+        loading,
         addToCart,
         removeFromCart,
         updateQuantity,

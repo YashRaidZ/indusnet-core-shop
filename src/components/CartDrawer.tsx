@@ -10,7 +10,22 @@ interface CartDrawerProps {
 }
 
 export const CartDrawer = ({ children }: CartDrawerProps) => {
-  const { items, updateQuantity, removeFromCart, getTotalPrice, getItemCount } = useCart();
+  const { items, updateQuantity, removeFromCart, getTotalPrice, getItemCount, loading } = useCart();
+
+  if (loading) {
+    return (
+      <Sheet>
+        <SheetTrigger asChild>
+          {children}
+        </SheetTrigger>
+        <SheetContent>
+          <div className="flex items-center justify-center h-full">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        </SheetContent>
+      </Sheet>
+    );
+  }
 
   const itemCount = getItemCount();
   const totalPrice = getTotalPrice();
