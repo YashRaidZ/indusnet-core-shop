@@ -24,6 +24,7 @@ const Navigation = () => {
     { href: "#home", label: "Home" },
     { href: "#features", label: "Features" },
     { href: "#shop", label: "Shop" },
+    { href: "/rules", label: "Rules", isLink: true },
     { href: "#news", label: "News" },
     { href: "/dashboard", label: "Dashboard", isLink: true },
     ...(isAdmin ? [{ href: "/admin", label: "Admin", isLink: true }] : [])

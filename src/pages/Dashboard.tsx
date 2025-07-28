@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { User, Crown, Package, History, Settings, Diamond, Coins, Trophy } from 'lucide-react';
+import { User, Crown, Package, History, Settings, Diamond, Coins, Trophy, MessageSquare, Shield } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { ProfileCard } from '@/components/ProfileCard';
 
@@ -60,14 +60,18 @@ const Dashboard = () => {
                     <CardTitle>Quick Actions</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-2 gap-4">
-                      <Button variant="outline" className="h-20 flex-col">
-                        <Package className="w-6 h-6 mb-2" />
-                        <span>Visit Shop</span>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      <Button variant="outline" className="h-20 flex-col gap-2" onClick={() => navigate('/profile')}>
+                        <User className="h-6 w-6" />
+                        <span>Edit Profile</span>
                       </Button>
-                      <Button variant="outline" className="h-20 flex-col">
-                        <Settings className="w-6 h-6 mb-2" />
-                        <span>Server Status</span>
+                      <Button variant="outline" className="h-20 flex-col gap-2" onClick={() => navigate('/support')}>
+                        <MessageSquare className="h-6 w-6" />
+                        <span>Support</span>
+                      </Button>
+                      <Button variant="outline" className="h-20 flex-col gap-2" onClick={() => navigate('/rules')}>
+                        <Shield className="h-6 w-6" />
+                        <span>Server Rules</span>
                       </Button>
                     </div>
                   </CardContent>
