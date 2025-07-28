@@ -14,7 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          achievements: number | null
+          avatar_url: string | null
+          coins: number | null
+          created_at: string
+          display_name: string | null
+          id: string
+          minecraft_username: string | null
+          playtime_hours: number | null
+          rank: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          achievements?: number | null
+          avatar_url?: string | null
+          coins?: number | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          minecraft_username?: string | null
+          playtime_hours?: number | null
+          rank?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          achievements?: number | null
+          avatar_url?: string | null
+          coins?: number | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          minecraft_username?: string | null
+          playtime_hours?: number | null
+          rank?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
