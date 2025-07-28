@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Crown, Star, Sparkles, ShoppingCart } from "lucide-react";
+import { useCart } from "@/contexts/CartContext";
 
 interface ProductCardProps {
   title: string;
@@ -23,6 +24,16 @@ const ProductCard = ({
   tier, 
   popular = false 
 }: ProductCardProps) => {
+  const { addToCart } = useCart();
+
+  const handleAddToCart = () => {
+    addToCart({
+      id: `${title.toLowerCase().replace(/\s+/g, '-')}`,
+      name: title,
+      price: parseFloat(price.replace('$', '')),
+      category: tier
+    });
+  };
   const tierConfig = {
     basic: {
       icon: Star,
@@ -88,9 +99,10 @@ const ProductCard = ({
           variant={config.variant} 
           size="lg" 
           className="w-full group/btn"
+          onClick={handleAddToCart}
         >
           <ShoppingCart className="h-4 w-4 mr-2 group-hover/btn:scale-110 transition-transform" />
-          Purchase Now
+          Add to Cart
         </Button>
       </div>
     </Card>
