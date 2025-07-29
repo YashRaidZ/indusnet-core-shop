@@ -205,6 +205,69 @@ export type Database = {
         }
         Relationships: []
       }
+      rcon_audit_log: {
+        Row: {
+          command: string
+          executed_at: string
+          id: string
+          result: string | null
+          server_name: string
+          success: boolean | null
+          user_id: string
+        }
+        Insert: {
+          command: string
+          executed_at?: string
+          id?: string
+          result?: string | null
+          server_name: string
+          success?: boolean | null
+          user_id: string
+        }
+        Update: {
+          command?: string
+          executed_at?: string
+          id?: string
+          result?: string | null
+          server_name?: string
+          success?: boolean | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      rcon_servers: {
+        Row: {
+          created_at: string
+          host: string
+          id: string
+          is_active: boolean | null
+          name: string
+          password: string
+          port: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          host: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          password: string
+          port?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          host?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          password?: string
+          port?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       support_tickets: {
         Row: {
           category: string
