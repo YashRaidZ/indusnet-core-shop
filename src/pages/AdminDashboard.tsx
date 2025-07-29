@@ -24,7 +24,9 @@ import {
   Plus,
   Terminal,
   Trash2,
-  Save
+  Save,
+  CreditCard,
+  DollarSign
 } from 'lucide-react';
 
 interface User {
@@ -57,13 +59,38 @@ interface Order {
   user_id: string;
 }
 
+interface PaymentPlan {
+  id: string;
+  name: string;
+  description: string;
+  amount: number;
+  currency: string;
+  interval: string;
+  is_active: boolean;
+  features: string[];
+  rcon_commands: string[];
+}
+
+interface PaymentTransaction {
+  id: string;
+  amount: number;
+  currency: string;
+  status: string;
+  customer_email: string;
+  created_at: string;
+}
+
 const AdminDashboard = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [paymentPlans, setPaymentPlans] = useState<PaymentPlan[]>([]);
+  const [transactions, setTransactions] = useState<PaymentTransaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [showProductDialog, setShowProductDialog] = useState(false);
+  const [showPlanDialog, setShowPlanDialog] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [editingPlan, setEditingPlan] = useState<PaymentPlan | null>(null);
   const [rconCommand, setRconCommand] = useState('');
   const [rconOutput, setRconOutput] = useState('');
   const [rconLoading, setRconLoading] = useState(false);
@@ -76,6 +103,15 @@ const AdminDashboard = () => {
     features: '',
     is_active: true,
     is_popular: false
+  });
+  const [planForm, setPlanForm] = useState({
+    name: '',
+    description: '',
+    amount: '',
+    interval: 'month',
+    features: '',
+    rcon_commands: '',
+    is_active: true
   });
   const { toast } = useToast();
 
@@ -123,9 +159,28 @@ const AdminDashboard = () => {
 
       if (ordersError) throw ordersError;
 
+      // Fetch payment plans
+      const { data: plansData, error: plansError } = await supabase
+        .from('payment_plans')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (plansError) throw plansError;
+
+      // Fetch payment transactions
+      const { data: transactionsData, error: transactionsError } = await supabase
+        .from('payment_transactions')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (transactionsError) throw transactionsError;
+
       setUsers(usersWithRoles);
       setProducts(productsData || []);
       setOrders(ordersData || []);
+      setPaymentPlans(plansData || []);
+      setTransactions(transactionsData || []);
     } catch (error) {
       console.error('Error fetching admin data:', error);
       toast({
@@ -327,6 +382,131 @@ const AdminDashboard = () => {
     setShowProductDialog(true);
   };
 
+  // Create or update payment plan
+  const savePlan = async () => {
+    try {
+      const planData = {
+        name: planForm.name,
+        description: planForm.description,
+        amount: parseFloat(planForm.amount),
+        interval: planForm.interval,
+        features: planForm.features.split(',').map(f => f.trim()).filter(f => f),
+        rcon_commands: planForm.rcon_commands.split(',').map(c => c.trim()).filter(c => c),
+        is_active: planForm.is_active
+      };
+
+      let error;
+      if (editingPlan) {
+        const result = await supabase
+          .from('payment_plans')
+          .update(planData)
+          .eq('id', editingPlan.id);
+        error = result.error;
+      } else {
+        const result = await supabase
+          .from('payment_plans')
+          .insert(planData);
+        error = result.error;
+      }
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `Payment plan ${editingPlan ? 'updated' : 'created'} successfully`,
+      });
+      
+      setShowPlanDialog(false);
+      setEditingPlan(null);
+      setPlanForm({
+        name: '',
+        description: '',
+        amount: '',
+        interval: 'month',
+        features: '',
+        rcon_commands: '',
+        is_active: true
+      });
+      fetchData();
+    } catch (error) {
+      console.error('Error saving payment plan:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save payment plan",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Delete payment plan
+  const deletePlan = async (planId: string) => {
+    if (!confirm('Are you sure you want to delete this payment plan?')) return;
+    
+    try {
+      const { error } = await supabase
+        .from('payment_plans')
+        .delete()
+        .eq('id', planId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Payment plan deleted successfully",
+      });
+      
+      fetchData();
+    } catch (error) {
+      console.error('Error deleting payment plan:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete payment plan",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Toggle payment plan status
+  const togglePlanStatus = async (planId: string, isActive: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('payment_plans')
+        .update({ is_active: !isActive })
+        .eq('id', planId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `Payment plan ${!isActive ? 'activated' : 'deactivated'} successfully`,
+      });
+      
+      fetchData();
+    } catch (error) {
+      console.error('Error updating payment plan status:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update payment plan status",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Open plan dialog for editing
+  const openEditPlan = (plan: PaymentPlan) => {
+    setEditingPlan(plan);
+    setPlanForm({
+      name: plan.name,
+      description: plan.description || '',
+      amount: plan.amount.toString(),
+      interval: plan.interval,
+      features: plan.features?.join(', ') || '',
+      rcon_commands: plan.rcon_commands?.join(', ') || '',
+      is_active: plan.is_active
+    });
+    setShowPlanDialog(true);
+  };
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -402,7 +582,7 @@ const AdminDashboard = () => {
 
         {/* Management Tabs */}
         <Tabs defaultValue="users" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="users">
               <Users className="w-4 h-4 mr-2" />
               Users
@@ -414,6 +594,14 @@ const AdminDashboard = () => {
             <TabsTrigger value="orders">
               <ShoppingCart className="w-4 h-4 mr-2" />
               Orders
+            </TabsTrigger>
+            <TabsTrigger value="payments">
+              <CreditCard className="w-4 h-4 mr-2" />
+              Payments
+            </TabsTrigger>
+            <TabsTrigger value="transactions">
+              <DollarSign className="w-4 h-4 mr-2" />
+              Transactions
             </TabsTrigger>
             <TabsTrigger value="rcon">
               <Terminal className="w-4 h-4 mr-2" />
@@ -728,6 +916,248 @@ const AdminDashboard = () => {
                         </TableCell>
                         <TableCell>
                           {new Date(order.created_at).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>
+                          <Button variant="outline" size="sm">
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Payment Plans Management */}
+          <TabsContent value="payments">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>Payment Plans Management</CardTitle>
+                  <CardDescription>Manage subscription plans and one-time payments</CardDescription>
+                </div>
+                <Dialog open={showPlanDialog} onOpenChange={setShowPlanDialog}>
+                  <DialogTrigger asChild>
+                    <Button onClick={() => {
+                      setEditingPlan(null);
+                      setPlanForm({
+                        name: '',
+                        description: '',
+                        amount: '',
+                        interval: 'month',
+                        features: '',
+                        rcon_commands: '',
+                        is_active: true
+                      });
+                    }}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Payment Plan
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>{editingPlan ? 'Edit Payment Plan' : 'Add New Payment Plan'}</DialogTitle>
+                      <DialogDescription>
+                        {editingPlan ? 'Update payment plan details' : 'Create a new payment plan'}
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="plan-name">Plan Name</Label>
+                        <Input
+                          id="plan-name"
+                          value={planForm.name}
+                          onChange={(e) => setPlanForm(prev => ({ ...prev, name: e.target.value }))}
+                          placeholder="Enter plan name"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="plan-description">Description</Label>
+                        <Textarea
+                          id="plan-description"
+                          value={planForm.description}
+                          onChange={(e) => setPlanForm(prev => ({ ...prev, description: e.target.value }))}
+                          placeholder="Enter plan description"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <Label htmlFor="plan-amount">Amount ($)</Label>
+                          <Input
+                            id="plan-amount"
+                            type="number"
+                            step="0.01"
+                            value={planForm.amount}
+                            onChange={(e) => setPlanForm(prev => ({ ...prev, amount: e.target.value }))}
+                            placeholder="0.00"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="plan-interval">Billing Interval</Label>
+                          <Select value={planForm.interval} onValueChange={(value) => setPlanForm(prev => ({ ...prev, interval: value }))}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select interval" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="month">Monthly</SelectItem>
+                              <SelectItem value="year">Yearly</SelectItem>
+                              <SelectItem value="one_time">One Time</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <div>
+                        <Label htmlFor="plan-features">Features (comma-separated)</Label>
+                        <Textarea
+                          id="plan-features"
+                          value={planForm.features}
+                          onChange={(e) => setPlanForm(prev => ({ ...prev, features: e.target.value }))}
+                          placeholder="Feature 1, Feature 2, Feature 3"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="plan-rcon">RCON Commands (comma-separated)</Label>
+                        <Textarea
+                          id="plan-rcon"
+                          value={planForm.rcon_commands}
+                          onChange={(e) => setPlanForm(prev => ({ ...prev, rcon_commands: e.target.value }))}
+                          placeholder="lp user {username} parent set vip, kit vip {username}"
+                        />
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          checked={planForm.is_active}
+                          onChange={(e) => setPlanForm(prev => ({ ...prev, is_active: e.target.checked }))}
+                        />
+                        <span>Active</span>
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setShowPlanDialog(false)}>
+                        Cancel
+                      </Button>
+                      <Button onClick={savePlan}>
+                        <Save className="w-4 h-4 mr-2" />
+                        {editingPlan ? 'Update' : 'Create'}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Plan Name</TableHead>
+                      <TableHead>Amount</TableHead>
+                      <TableHead>Interval</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Features</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {paymentPlans.map((plan) => (
+                      <TableRow key={plan.id}>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium">{plan.name}</p>
+                            <p className="text-sm text-muted-foreground">{plan.description}</p>
+                          </div>
+                        </TableCell>
+                        <TableCell>${plan.amount}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{plan.interval}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={plan.is_active ? 'default' : 'secondary'}>
+                            {plan.is_active ? 'Active' : 'Inactive'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-sm">
+                            {plan.features?.slice(0, 2).map((feature, i) => (
+                              <div key={i}>{feature}</div>
+                            ))}
+                            {plan.features?.length > 2 && (
+                              <div className="text-muted-foreground">+{plan.features.length - 2} more</div>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex space-x-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => togglePlanStatus(plan.id, plan.is_active)}
+                            >
+                              {plan.is_active ? (
+                                <ToggleRight className="w-4 h-4" />
+                              ) : (
+                                <ToggleLeft className="w-4 h-4" />
+                              )}
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={() => openEditPlan(plan)}>
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => deletePlan(plan.id)}
+                              className="text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Transactions Management */}
+          <TabsContent value="transactions">
+            <Card>
+              <CardHeader>
+                <CardTitle>Payment Transactions</CardTitle>
+                <CardDescription>View and monitor all payment transactions</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Transaction ID</TableHead>
+                      <TableHead>Customer</TableHead>
+                      <TableHead>Amount</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {transactions.map((transaction) => (
+                      <TableRow key={transaction.id}>
+                        <TableCell className="font-mono text-sm">
+                          {transaction.id.substring(0, 8)}...
+                        </TableCell>
+                        <TableCell>{transaction.customer_email}</TableCell>
+                        <TableCell>${transaction.amount} {transaction.currency.toUpperCase()}</TableCell>
+                        <TableCell>
+                          <Badge variant={
+                            transaction.status === 'completed' ? 'default' :
+                            transaction.status === 'pending' ? 'secondary' : 'destructive'
+                          }>
+                            {transaction.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {new Date(transaction.created_at).toLocaleDateString()}
                         </TableCell>
                         <TableCell>
                           <Button variant="outline" size="sm">

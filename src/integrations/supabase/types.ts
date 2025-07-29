@@ -91,32 +91,175 @@ export type Database = {
       orders: {
         Row: {
           created_at: string
+          fulfillment_status: string | null
           id: string
           payment_method: string | null
+          rcon_commands_executed: boolean | null
           status: string
+          stripe_payment_intent_id: string | null
+          stripe_session_id: string | null
           total_amount: number
           updated_at: string
           user_id: string
         }
         Insert: {
           created_at?: string
+          fulfillment_status?: string | null
           id?: string
           payment_method?: string | null
+          rcon_commands_executed?: boolean | null
           status?: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
           total_amount: number
           updated_at?: string
           user_id: string
         }
         Update: {
           created_at?: string
+          fulfillment_status?: string | null
           id?: string
           payment_method?: string | null
+          rcon_commands_executed?: boolean | null
           status?: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
           total_amount?: number
           updated_at?: string
           user_id?: string
         }
         Relationships: []
+      }
+      payment_configs: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean | null
+          provider: string
+          test_mode: boolean | null
+          updated_at: string
+          webhook_url: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          provider?: string
+          test_mode?: boolean | null
+          updated_at?: string
+          webhook_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          provider?: string
+          test_mode?: boolean | null
+          updated_at?: string
+          webhook_url?: string | null
+        }
+        Relationships: []
+      }
+      payment_plans: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string | null
+          description: string | null
+          features: string[] | null
+          id: string
+          interval: string | null
+          is_active: boolean | null
+          name: string
+          rcon_commands: string[] | null
+          stripe_price_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string | null
+          description?: string | null
+          features?: string[] | null
+          id?: string
+          interval?: string | null
+          is_active?: boolean | null
+          name: string
+          rcon_commands?: string[] | null
+          stripe_price_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string | null
+          description?: string | null
+          features?: string[] | null
+          id?: string
+          interval?: string | null
+          is_active?: boolean | null
+          name?: string
+          rcon_commands?: string[] | null
+          stripe_price_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      payment_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string | null
+          customer_email: string | null
+          id: string
+          metadata: Json | null
+          order_id: string | null
+          payment_method: string | null
+          status: string
+          stripe_payment_intent_id: string | null
+          stripe_session_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string | null
+          customer_email?: string | null
+          id?: string
+          metadata?: Json | null
+          order_id?: string | null
+          payment_method?: string | null
+          status?: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string | null
+          customer_email?: string | null
+          id?: string
+          metadata?: Json | null
+          order_id?: string | null
+          payment_method?: string | null
+          status?: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_transactions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       products: {
         Row: {
@@ -267,6 +410,53 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      subscribers: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          plan_id: string | null
+          stripe_customer_id: string | null
+          subscribed: boolean
+          subscription_end: string | null
+          subscription_tier: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          plan_id?: string | null
+          stripe_customer_id?: string | null
+          subscribed?: boolean
+          subscription_end?: string | null
+          subscription_tier?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          plan_id?: string | null
+          stripe_customer_id?: string | null
+          subscribed?: boolean
+          subscription_end?: string | null
+          subscription_tier?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscribers_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "payment_plans"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       support_tickets: {
         Row: {
