@@ -5,6 +5,10 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { 
@@ -16,7 +20,11 @@ import {
   Edit, 
   Eye,
   ToggleLeft,
-  ToggleRight
+  ToggleRight,
+  Plus,
+  Terminal,
+  Trash2,
+  Save
 } from 'lucide-react';
 
 interface User {
@@ -54,6 +62,21 @@ const AdminDashboard = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showProductDialog, setShowProductDialog] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [rconCommand, setRconCommand] = useState('');
+  const [rconOutput, setRconOutput] = useState('');
+  const [rconLoading, setRconLoading] = useState(false);
+  const [productForm, setProductForm] = useState({
+    name: '',
+    description: '',
+    price: '',
+    category: '',
+    tier: '',
+    features: '',
+    is_active: true,
+    is_popular: false
+  });
   const { toast } = useToast();
 
   // Fetch admin data
@@ -173,6 +196,137 @@ const AdminDashboard = () => {
     }
   };
 
+  // Create or update product
+  const saveProduct = async () => {
+    try {
+      const productData = {
+        name: productForm.name,
+        description: productForm.description,
+        price: parseFloat(productForm.price),
+        category: productForm.category,
+        tier: productForm.tier,
+        features: productForm.features.split(',').map(f => f.trim()).filter(f => f),
+        is_active: productForm.is_active,
+        is_popular: productForm.is_popular
+      };
+
+      let error;
+      if (editingProduct) {
+        // Update existing product
+        const result = await supabase
+          .from('products')
+          .update(productData)
+          .eq('id', editingProduct.id);
+        error = result.error;
+      } else {
+        // Create new product
+        const result = await supabase
+          .from('products')
+          .insert(productData);
+        error = result.error;
+      }
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `Product ${editingProduct ? 'updated' : 'created'} successfully`,
+      });
+      
+      setShowProductDialog(false);
+      setEditingProduct(null);
+      setProductForm({
+        name: '',
+        description: '',
+        price: '',
+        category: '',
+        tier: '',
+        features: '',
+        is_active: true,
+        is_popular: false
+      });
+      fetchData();
+    } catch (error) {
+      console.error('Error saving product:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save product",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Delete product
+  const deleteProduct = async (productId: string) => {
+    if (!confirm('Are you sure you want to delete this product?')) return;
+    
+    try {
+      const { error } = await supabase
+        .from('products')
+        .delete()
+        .eq('id', productId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Product deleted successfully",
+      });
+      
+      fetchData();
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete product",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Execute RCON command
+  const executeRconCommand = async () => {
+    if (!rconCommand.trim()) return;
+    
+    setRconLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('rcon-command', {
+        body: { command: rconCommand }
+      });
+
+      if (error) throw error;
+
+      setRconOutput(prev => `${prev}\n> ${rconCommand}\n${data.result || 'Command executed successfully'}`);
+      setRconCommand('');
+    } catch (error) {
+      console.error('Error executing RCON command:', error);
+      setRconOutput(prev => `${prev}\n> ${rconCommand}\nError: ${error.message}`);
+      toast({
+        title: "Error",
+        description: "Failed to execute RCON command",
+        variant: "destructive",
+      });
+    } finally {
+      setRconLoading(false);
+    }
+  };
+
+  // Open product dialog for editing
+  const openEditProduct = (product: Product) => {
+    setEditingProduct(product);
+    setProductForm({
+      name: product.name,
+      description: product.description || '',
+      price: product.price.toString(),
+      category: product.category,
+      tier: product.tier || '',
+      features: product.features?.join(', ') || '',
+      is_active: product.is_active,
+      is_popular: product.is_popular || false
+    });
+    setShowProductDialog(true);
+  };
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -248,7 +402,7 @@ const AdminDashboard = () => {
 
         {/* Management Tabs */}
         <Tabs defaultValue="users" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="users">
               <Users className="w-4 h-4 mr-2" />
               Users
@@ -260,6 +414,10 @@ const AdminDashboard = () => {
             <TabsTrigger value="orders">
               <ShoppingCart className="w-4 h-4 mr-2" />
               Orders
+            </TabsTrigger>
+            <TabsTrigger value="rcon">
+              <Terminal className="w-4 h-4 mr-2" />
+              RCON
             </TabsTrigger>
             <TabsTrigger value="settings">
               <Settings className="w-4 h-4 mr-2" />
@@ -334,9 +492,131 @@ const AdminDashboard = () => {
           {/* Products Management */}
           <TabsContent value="products">
             <Card>
-              <CardHeader>
-                <CardTitle>Product Management</CardTitle>
-                <CardDescription>Manage store products and pricing</CardDescription>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>Product Management</CardTitle>
+                  <CardDescription>Manage store products and pricing</CardDescription>
+                </div>
+                <Dialog open={showProductDialog} onOpenChange={setShowProductDialog}>
+                  <DialogTrigger asChild>
+                    <Button onClick={() => {
+                      setEditingProduct(null);
+                      setProductForm({
+                        name: '',
+                        description: '',
+                        price: '',
+                        category: '',
+                        tier: '',
+                        features: '',
+                        is_active: true,
+                        is_popular: false
+                      });
+                    }}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Product
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>{editingProduct ? 'Edit Product' : 'Add New Product'}</DialogTitle>
+                      <DialogDescription>
+                        {editingProduct ? 'Update product details' : 'Create a new product for the store'}
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="name">Product Name</Label>
+                        <Input
+                          id="name"
+                          value={productForm.name}
+                          onChange={(e) => setProductForm(prev => ({ ...prev, name: e.target.value }))}
+                          placeholder="Enter product name"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="description">Description</Label>
+                        <Textarea
+                          id="description"
+                          value={productForm.description}
+                          onChange={(e) => setProductForm(prev => ({ ...prev, description: e.target.value }))}
+                          placeholder="Enter product description"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <Label htmlFor="price">Price ($)</Label>
+                          <Input
+                            id="price"
+                            type="number"
+                            step="0.01"
+                            value={productForm.price}
+                            onChange={(e) => setProductForm(prev => ({ ...prev, price: e.target.value }))}
+                            placeholder="0.00"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="category">Category</Label>
+                          <Select value={productForm.category} onValueChange={(value) => setProductForm(prev => ({ ...prev, category: value }))}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select category" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="ranks">Ranks</SelectItem>
+                              <SelectItem value="kits">Kits</SelectItem>
+                              <SelectItem value="cosmetics">Cosmetics</SelectItem>
+                              <SelectItem value="perks">Perks</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <div>
+                        <Label htmlFor="tier">Tier</Label>
+                        <Input
+                          id="tier"
+                          value={productForm.tier}
+                          onChange={(e) => setProductForm(prev => ({ ...prev, tier: e.target.value }))}
+                          placeholder="e.g., VIP, Elite, Premium"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="features">Features (comma-separated)</Label>
+                        <Textarea
+                          id="features"
+                          value={productForm.features}
+                          onChange={(e) => setProductForm(prev => ({ ...prev, features: e.target.value }))}
+                          placeholder="Feature 1, Feature 2, Feature 3"
+                        />
+                      </div>
+                      <div className="flex items-center space-x-4">
+                        <label className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            checked={productForm.is_active}
+                            onChange={(e) => setProductForm(prev => ({ ...prev, is_active: e.target.checked }))}
+                          />
+                          <span>Active</span>
+                        </label>
+                        <label className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            checked={productForm.is_popular}
+                            onChange={(e) => setProductForm(prev => ({ ...prev, is_popular: e.target.checked }))}
+                          />
+                          <span>Popular</span>
+                        </label>
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setShowProductDialog(false)}>
+                        Cancel
+                      </Button>
+                      <Button onClick={saveProduct}>
+                        <Save className="w-4 h-4 mr-2" />
+                        {editingProduct ? 'Update' : 'Create'}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </CardHeader>
               <CardContent>
                 <Table>
@@ -388,8 +668,16 @@ const AdminDashboard = () => {
                                 <ToggleLeft className="w-4 h-4" />
                               )}
                             </Button>
-                            <Button variant="outline" size="sm">
+                            <Button variant="outline" size="sm" onClick={() => openEditProduct(product)}>
                               <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => deleteProduct(product.id)}
+                              className="text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="w-4 h-4" />
                             </Button>
                           </div>
                         </TableCell>
@@ -450,6 +738,83 @@ const AdminDashboard = () => {
                     ))}
                   </TableBody>
                 </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* RCON Management */}
+          <TabsContent value="rcon">
+            <Card>
+              <CardHeader>
+                <CardTitle>RCON Console</CardTitle>
+                <CardDescription>Execute Minecraft server commands remotely</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="rcon-output">Console Output</Label>
+                  <Textarea
+                    id="rcon-output"
+                    value={rconOutput}
+                    readOnly
+                    className="min-h-[300px] font-mono text-sm bg-black text-green-400 border-0"
+                    placeholder="RCON output will appear here..."
+                  />
+                </div>
+                <div className="flex space-x-2">
+                  <div className="flex-1">
+                    <Label htmlFor="rcon-command">Command</Label>
+                    <Input
+                      id="rcon-command"
+                      value={rconCommand}
+                      onChange={(e) => setRconCommand(e.target.value)}
+                      placeholder="Enter RCON command (e.g., list, say Hello World)"
+                      onKeyPress={(e) => e.key === 'Enter' && executeRconCommand()}
+                      className="font-mono"
+                    />
+                  </div>
+                  <Button 
+                    onClick={executeRconCommand} 
+                    disabled={rconLoading || !rconCommand.trim()}
+                    className="mt-6"
+                  >
+                    <Terminal className="w-4 h-4 mr-2" />
+                    Execute
+                  </Button>
+                </div>
+                <div className="flex space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setRconCommand('list')}
+                  >
+                    List Players
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setRconCommand('tps')}
+                  >
+                    Check TPS
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setRconCommand('save-all')}
+                  >
+                    Save World
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setRconOutput('')}
+                  >
+                    Clear Output
+                  </Button>
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  <p><strong>Warning:</strong> Use RCON commands carefully. Some commands can affect server performance or player experience.</p>
+                  <p><strong>Common commands:</strong> list, tps, save-all, whitelist, ban, kick, say, give</p>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
