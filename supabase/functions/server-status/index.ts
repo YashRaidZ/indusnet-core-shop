@@ -166,7 +166,7 @@ async function sendPacket(socket: Deno.Conn, packetId: number, data: Uint8Array[
 
 async function readPacket(socket: Deno.Conn) {
   // Read packet length
-  const lengthResult = await readVarInt(socket);
+  const lengthResult = await readVarIntFromSocket(socket);
   const packetLength = lengthResult.value;
   
   // Read packet data
@@ -182,7 +182,7 @@ async function readPacket(socket: Deno.Conn) {
   };
 }
 
-async function readVarInt(socket: Deno.Conn): Promise<{ value: number; bytesRead: number }> {
+async function readVarIntFromSocket(socket: Deno.Conn): Promise<{ value: number; bytesRead: number }> {
   let value = 0;
   let position = 0;
   let bytesRead = 0;
