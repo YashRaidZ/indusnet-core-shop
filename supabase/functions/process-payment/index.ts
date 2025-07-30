@@ -119,19 +119,46 @@ serve(async (req) => {
             minecraftUsername = profile?.minecraft_username;
           }
 
-          // Execute RCON commands if product has them
+          // Execute RCON commands based on product category
           const product = order.products as any;
-          if (product.features && product.features.includes('auto_fulfillment')) {
-            // Define default RCON commands for different product categories
-            const defaultCommands: Record<string, string[]> = {
-              'ranks': [`lp user {username} parent set ${product.tier || product.name}`],
-              'kits': [`kit ${product.name.toLowerCase()} {username}`],
-              'cosmetics': [`give {username} ${product.name.toLowerCase().replace(' ', '_')}`],
-              'perks': [`perm add {username} ${product.name.toLowerCase().replace(' ', '.')}`]
-            };
+          if (minecraftUsername) {
+            let commands: string[] = [];
+            
+            // Handle different product categories with specific RCON commands
+            switch (product.category?.toLowerCase()) {
+              case 'ranks':
+                // Use tier if available, otherwise use product name
+                const groupName = product.tier || product.name.toLowerCase().replace(/\s+/g, '');
+                commands = [`lp user {username} parent set ${groupName}`];
+                break;
+                
+              case 'coins':
+              case 'currency':
+                // Extract amount from product name or use price as fallback
+                const coinAmount = product.name.match(/(\d+)/) ? product.name.match(/(\d+)/)[1] : Math.floor(product.price || 0);
+                commands = [`eco give {username} ${coinAmount}`];
+                break;
+                
+              case 'kits':
+                commands = [`kit ${product.name.toLowerCase().replace(/\s+/g, '')} {username}`];
+                break;
+                
+              case 'cosmetics':
+                commands = [`give {username} ${product.name.toLowerCase().replace(/\s+/g, '_')}`];
+                break;
+                
+              case 'perks':
+                commands = [`perm add {username} ${product.name.toLowerCase().replace(/\s+/g, '.')}`];
+                break;
+                
+              default:
+                // Check if product has custom RCON commands
+                if (product.features && product.features.includes('auto_fulfillment')) {
+                  commands = [`give {username} ${product.name.toLowerCase().replace(/\s+/g, '_')}`];
+                }
+            }
 
-            const commands = defaultCommands[product.category] || [];
-            if (commands.length > 0 && minecraftUsername) {
+            if (commands.length > 0) {
               await executeRconCommands(commands, minecraftUsername);
               
               // Mark as fulfilled
@@ -142,7 +169,17 @@ serve(async (req) => {
                   rcon_commands_executed: true 
                 })
                 .eq('id', orderId);
+                
+              logStep("Product delivered", { 
+                category: product.category, 
+                username: minecraftUsername,
+                commands 
+              });
+            } else {
+              logStep("No delivery commands for product category", { category: product.category });
             }
+          } else {
+            logStep("Cannot deliver - no Minecraft username found", { userId: order.user_id });
           }
         }
 
