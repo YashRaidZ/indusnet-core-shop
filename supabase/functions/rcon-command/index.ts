@@ -51,17 +51,31 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Command is required");
     }
 
-    // Get RCON credentials from environment
-    const rconHost = Deno.env.get("RCON_HOST") || "localhost";
-    const rconPort = parseInt(Deno.env.get("RCON_PORT") || "25575");
-    const rconPassword = Deno.env.get("RCON_PASSWORD");
+    // Get RCON server configuration from database
+    const { data: serverConfig, error: serverError } = await supabaseClient
+      .from('rcon_servers')
+      .select('*')
+      .eq('name', server)
+      .eq('is_active', true)
+      .single();
 
-    if (!rconPassword) {
-      throw new Error("RCON password not configured");
+    if (serverError || !serverConfig) {
+      throw new Error(`RCON server '${server}' not found or inactive`);
     }
 
     // Connect to Minecraft server via RCON
-    const result = await executeRconCommand(rconHost, rconPort, rconPassword, command);
+    const result = await executeRconCommand(serverConfig.host, serverConfig.port, serverConfig.password, command);
+
+    // Log the command execution to audit log
+    await supabaseClient
+      .from('rcon_audit_log')
+      .insert({
+        user_id: user.id,
+        server_name: server,
+        command,
+        result,
+        success: true
+      });
 
     // Log the command execution
     console.log(`Admin ${user.email} executed RCON command: ${command}`);

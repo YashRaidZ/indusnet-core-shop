@@ -1,40 +1,40 @@
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import React, { useState, useEffect } from 'react';
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Users, 
   Package, 
   ShoppingCart, 
+  CreditCard, 
+  Receipt, 
+  Terminal, 
   Settings, 
-  Crown, 
   Edit, 
-  Eye,
-  ToggleLeft,
-  ToggleRight,
+  Trash2, 
   Plus,
-  Terminal,
-  Trash2,
-  Save,
-  CreditCard,
-  DollarSign
-} from 'lucide-react';
+  Eye,
+  EyeOff,
+  DollarSign,
+  TrendingUp,
+  Server
+} from "lucide-react";
 
 interface User {
+  id: string;
   user_id: string;
-  minecraft_username: string;
   display_name: string;
-  coins: number;
-  rank: string;
+  minecraft_username: string;
+  created_at: string;
   role?: string;
 }
 
@@ -45,18 +45,19 @@ interface Product {
   price: number;
   category: string;
   tier: string;
+  features: string[];
   is_active: boolean;
   is_popular: boolean;
-  features: string[];
+  created_at: string;
 }
 
 interface Order {
   id: string;
+  user_id: string;
   total_amount: number;
   status: string;
-  payment_method: string;
+  fulfillment_status: string;
   created_at: string;
-  user_id: string;
 }
 
 interface PaymentPlan {
@@ -64,23 +65,24 @@ interface PaymentPlan {
   name: string;
   description: string;
   amount: number;
-  currency: string;
   interval: string;
-  is_active: boolean;
   features: string[];
   rcon_commands: string[];
+  is_active: boolean;
+  created_at: string;
 }
 
 interface PaymentTransaction {
   id: string;
+  user_id: string;
   amount: number;
-  currency: string;
   status: string;
+  payment_method: string;
   customer_email: string;
   created_at: string;
 }
 
-const AdminDashboard = () => {
+export const AdminDashboard = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
@@ -94,6 +96,10 @@ const AdminDashboard = () => {
   const [rconCommand, setRconCommand] = useState('');
   const [rconOutput, setRconOutput] = useState('');
   const [rconLoading, setRconLoading] = useState(false);
+  const [rconServers, setRconServers] = useState<any[]>([]);
+  const [selectedServer, setSelectedServer] = useState('main');
+  const [showServerDialog, setShowServerDialog] = useState(false);
+  const [editingServer, setEditingServer] = useState<any>(null);
   const [productForm, setProductForm] = useState({
     name: '',
     description: '',
@@ -115,143 +121,127 @@ const AdminDashboard = () => {
   });
   const { toast } = useToast();
 
-  // Fetch admin data
   const fetchData = async () => {
     setLoading(true);
     try {
-      // Fetch users with profiles
-      const { data: profilesData, error: profilesError } = await supabase
+      const { data: usersData } = await supabase
         .from('profiles')
-        .select('user_id, minecraft_username, display_name, coins, rank');
+        .select(`
+          *,
+          user_roles (role)
+        `)
+        .order('created_at', { ascending: false });
 
-      if (profilesError) throw profilesError;
-
-      // Fetch user roles separately
-      const { data: rolesData, error: rolesError } = await supabase
-        .from('user_roles')
-        .select('user_id, role');
-
-      if (rolesError) throw rolesError;
-
-      // Combine profiles with roles
-      const usersWithRoles = profilesData?.map(profile => {
-        const userRole = rolesData?.find(role => role.user_id === profile.user_id);
-        return {
-          ...profile,
-          role: userRole?.role || 'user'
-        };
-      }) || [];
-
-      // Fetch products
-      const { data: productsData, error: productsError } = await supabase
+      const { data: productsData } = await supabase
         .from('products')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (productsError) throw productsError;
-
-      // Fetch orders
-      const { data: ordersData, error: ordersError } = await supabase
+      const { data: ordersData } = await supabase
         .from('orders')
-        .select('id, total_amount, status, payment_method, created_at, user_id')
-        .order('created_at', { ascending: false })
-        .limit(50);
+        .select('*')
+        .order('created_at', { ascending: false });
 
-      if (ordersError) throw ordersError;
-
-      // Fetch payment plans
-      const { data: plansData, error: plansError } = await supabase
+      const { data: plansData } = await supabase
         .from('payment_plans')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (plansError) throw plansError;
-
-      // Fetch payment transactions
-      const { data: transactionsData, error: transactionsError } = await supabase
+      const { data: transactionsData } = await supabase
         .from('payment_transactions')
         .select('*')
-        .order('created_at', { ascending: false })
-        .limit(50);
+        .order('created_at', { ascending: false });
 
-      if (transactionsError) throw transactionsError;
+      const { data: rconServersData } = await supabase
+        .from('rcon_servers')
+        .select('*')
+        .order('name');
 
-      setUsers(usersWithRoles);
+      setUsers(usersData || []);
       setProducts(productsData || []);
       setOrders(ordersData || []);
       setPaymentPlans(plansData || []);
       setTransactions(transactionsData || []);
+      setRconServers(rconServersData || []);
     } catch (error) {
-      console.error('Error fetching admin data:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load admin data",
-        variant: "destructive",
-      });
+      console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  // Update user role
+  useEffect(() => {
+    fetchData();
+  }, []);
+
   const updateUserRole = async (userId: string, newRole: string) => {
     try {
-      // First, delete existing role
-      await supabase
-        .from('user_roles')
-        .delete()
-        .eq('user_id', userId);
-
-      // Then insert new role
       const { error } = await supabase
         .from('user_roles')
-        .insert({ user_id: userId, role: newRole as 'admin' | 'moderator' | 'user' });
-
+        .upsert({ user_id: userId, role: newRole as 'admin' | 'moderator' | 'user' });
+      
       if (error) throw error;
-
+      
+      await fetchData();
       toast({
         title: "Success",
         description: "User role updated successfully",
       });
-      
-      fetchData(); // Refresh data
-    } catch (error) {
-      console.error('Error updating user role:', error);
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to update user role",
+        description: error.message,
         variant: "destructive",
       });
     }
   };
 
-  // Toggle product status
-  const toggleProductStatus = async (productId: string, isActive: boolean) => {
+  const toggleProductStatus = async (productId: string, currentStatus: boolean) => {
     try {
       const { error } = await supabase
         .from('products')
-        .update({ is_active: !isActive })
+        .update({ is_active: !currentStatus })
         .eq('id', productId);
-
+      
       if (error) throw error;
-
+      
+      await fetchData();
       toast({
         title: "Success",
-        description: `Product ${!isActive ? 'activated' : 'deactivated'} successfully`,
+        description: "Product status updated successfully",
       });
-      
-      fetchData(); // Refresh data
-    } catch (error) {
-      console.error('Error updating product status:', error);
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to update product status",
+        description: error.message,
         variant: "destructive",
       });
     }
   };
 
-  // Create or update product
+  const togglePlanStatus = async (planId: string, currentStatus: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('payment_plans')
+        .update({ is_active: !currentStatus })
+        .eq('id', planId);
+      
+      if (error) throw error;
+      
+      await fetchData();
+      toast({
+        title: "Success",
+        description: "Payment plan status updated successfully",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   const saveProduct = async () => {
     try {
       const productData = {
@@ -265,29 +255,20 @@ const AdminDashboard = () => {
         is_popular: productForm.is_popular
       };
 
-      let error;
       if (editingProduct) {
-        // Update existing product
-        const result = await supabase
+        const { error } = await supabase
           .from('products')
           .update(productData)
           .eq('id', editingProduct.id);
-        error = result.error;
+        if (error) throw error;
       } else {
-        // Create new product
-        const result = await supabase
+        const { error } = await supabase
           .from('products')
           .insert(productData);
-        error = result.error;
+        if (error) throw error;
       }
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: `Product ${editingProduct ? 'updated' : 'created'} successfully`,
-      });
       
+      await fetchData();
       setShowProductDialog(false);
       setEditingProduct(null);
       setProductForm({
@@ -300,89 +281,42 @@ const AdminDashboard = () => {
         is_active: true,
         is_popular: false
       });
-      fetchData();
-    } catch (error) {
-      console.error('Error saving product:', error);
+      toast({
+        title: "Success",
+        description: "Product saved successfully",
+      });
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to save product",
+        description: error.message,
         variant: "destructive",
       });
     }
   };
 
-  // Delete product
   const deleteProduct = async (productId: string) => {
-    if (!confirm('Are you sure you want to delete this product?')) return;
-    
     try {
       const { error } = await supabase
         .from('products')
         .delete()
         .eq('id', productId);
-
+      
       if (error) throw error;
-
+      
+      await fetchData();
       toast({
         title: "Success",
         description: "Product deleted successfully",
       });
-      
-      fetchData();
-    } catch (error) {
-      console.error('Error deleting product:', error);
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to delete product",
+        description: error.message,
         variant: "destructive",
       });
     }
   };
 
-  // Execute RCON command
-  const executeRconCommand = async () => {
-    if (!rconCommand.trim()) return;
-    
-    setRconLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('rcon-command', {
-        body: { command: rconCommand }
-      });
-
-      if (error) throw error;
-
-      setRconOutput(prev => `${prev}\n> ${rconCommand}\n${data.result || 'Command executed successfully'}`);
-      setRconCommand('');
-    } catch (error) {
-      console.error('Error executing RCON command:', error);
-      setRconOutput(prev => `${prev}\n> ${rconCommand}\nError: ${error.message}`);
-      toast({
-        title: "Error",
-        description: "Failed to execute RCON command",
-        variant: "destructive",
-      });
-    } finally {
-      setRconLoading(false);
-    }
-  };
-
-  // Open product dialog for editing
-  const openEditProduct = (product: Product) => {
-    setEditingProduct(product);
-    setProductForm({
-      name: product.name,
-      description: product.description || '',
-      price: product.price.toString(),
-      category: product.category,
-      tier: product.tier || '',
-      features: product.features?.join(', ') || '',
-      is_active: product.is_active,
-      is_popular: product.is_popular || false
-    });
-    setShowProductDialog(true);
-  };
-
-  // Create or update payment plan
   const savePlan = async () => {
     try {
       const planData = {
@@ -391,31 +325,24 @@ const AdminDashboard = () => {
         amount: parseFloat(planForm.amount),
         interval: planForm.interval,
         features: planForm.features.split(',').map(f => f.trim()).filter(f => f),
-        rcon_commands: planForm.rcon_commands.split(',').map(c => c.trim()).filter(c => c),
+        rcon_commands: planForm.rcon_commands.split(',').map(f => f.trim()).filter(f => f),
         is_active: planForm.is_active
       };
 
-      let error;
       if (editingPlan) {
-        const result = await supabase
+        const { error } = await supabase
           .from('payment_plans')
           .update(planData)
           .eq('id', editingPlan.id);
-        error = result.error;
+        if (error) throw error;
       } else {
-        const result = await supabase
+        const { error } = await supabase
           .from('payment_plans')
           .insert(planData);
-        error = result.error;
+        if (error) throw error;
       }
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: `Payment plan ${editingPlan ? 'updated' : 'created'} successfully`,
-      });
       
+      await fetchData();
       setShowPlanDialog(false);
       setEditingPlan(null);
       setPlanForm({
@@ -427,239 +354,243 @@ const AdminDashboard = () => {
         rcon_commands: '',
         is_active: true
       });
-      fetchData();
-    } catch (error) {
-      console.error('Error saving payment plan:', error);
+      toast({
+        title: "Success",
+        description: "Payment plan saved successfully",
+      });
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to save payment plan",
+        description: error.message,
         variant: "destructive",
       });
     }
   };
 
-  // Delete payment plan
   const deletePlan = async (planId: string) => {
-    if (!confirm('Are you sure you want to delete this payment plan?')) return;
-    
     try {
       const { error } = await supabase
         .from('payment_plans')
         .delete()
         .eq('id', planId);
-
+      
       if (error) throw error;
-
+      
+      await fetchData();
       toast({
         title: "Success",
         description: "Payment plan deleted successfully",
       });
-      
-      fetchData();
-    } catch (error) {
-      console.error('Error deleting payment plan:', error);
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to delete payment plan",
+        description: error.message,
         variant: "destructive",
       });
     }
   };
 
-  // Toggle payment plan status
-  const togglePlanStatus = async (planId: string, isActive: boolean) => {
+  const executeRconCommand = async () => {
+    if (!rconCommand.trim()) return;
+
+    setRconLoading(true);
     try {
-      const { error } = await supabase
-        .from('payment_plans')
-        .update({ is_active: !isActive })
-        .eq('id', planId);
+      const { data, error } = await supabase.functions.invoke('rcon-command', {
+        body: { 
+          command: rconCommand,
+          server: selectedServer 
+        }
+      });
 
       if (error) throw error;
 
+      const timestamp = new Date().toLocaleTimeString();
+      const output = `[${timestamp}] Server: ${selectedServer} | Command: ${rconCommand}\n${data.result || 'Command executed successfully'}\n\n`;
+      setRconOutput(prev => prev + output);
+      setRconCommand('');
+    } catch (error: any) {
+      const timestamp = new Date().toLocaleTimeString();
+      const output = `[${timestamp}] Error: ${error.message}\n\n`;
+      setRconOutput(prev => prev + output);
+    } finally {
+      setRconLoading(false);
+    }
+  };
+
+  const saveRconServer = async () => {
+    try {
+      if (editingServer?.id) {
+        const { error } = await supabase
+          .from('rcon_servers')
+          .update(editingServer)
+          .eq('id', editingServer.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('rcon_servers')
+          .insert(editingServer);
+        if (error) throw error;
+      }
+      
+      await fetchData();
+      setShowServerDialog(false);
+      setEditingServer(null);
       toast({
         title: "Success",
-        description: `Payment plan ${!isActive ? 'activated' : 'deactivated'} successfully`,
+        description: "RCON server saved successfully",
       });
-      
-      fetchData();
-    } catch (error) {
-      console.error('Error updating payment plan status:', error);
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to update payment plan status",
+        description: error.message,
         variant: "destructive",
       });
     }
   };
 
-  // Open plan dialog for editing
-  const openEditPlan = (plan: PaymentPlan) => {
-    setEditingPlan(plan);
-    setPlanForm({
-      name: plan.name,
-      description: plan.description || '',
-      amount: plan.amount.toString(),
-      interval: plan.interval,
-      features: plan.features?.join(', ') || '',
-      rcon_commands: plan.rcon_commands?.join(', ') || '',
-      is_active: plan.is_active
-    });
-    setShowPlanDialog(true);
+  const deleteRconServer = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('rcon_servers')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      
+      await fetchData();
+      toast({
+        title: "Success",
+        description: "RCON server deleted successfully",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+          <p className="mt-4 text-lg">Loading dashboard...</p>
+        </div>
       </div>
     );
   }
 
+  const totalRevenue = transactions
+    .filter(t => t.status === 'completed')
+    .reduce((sum, t) => sum + t.amount, 0);
+
   return (
-    <div className="min-h-screen bg-background pt-20">
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">Admin Dashboard</h1>
-          <p className="text-muted-foreground">Manage users, products, and orders</p>
-        </div>
+    <div className="container mx-auto py-8">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
+        <p className="text-muted-foreground">Manage your Minecraft server store</p>
+      </div>
 
-        {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-4">
-                <Users className="h-10 w-10 text-blue-500" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Users</p>
-                  <p className="text-2xl font-bold">{users.length}</p>
-                </div>
+      {/* Overview Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Total Users</p>
+                <p className="text-2xl font-bold">{users.length}</p>
               </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-4">
-                <Package className="h-10 w-10 text-green-500" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Products</p>
-                  <p className="text-2xl font-bold">{products.length}</p>
-                </div>
+              <Users className="w-8 h-8 text-primary" />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Products</p>
+                <p className="text-2xl font-bold">{products.length}</p>
               </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-4">
-                <ShoppingCart className="h-10 w-10 text-orange-500" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Orders</p>
-                  <p className="text-2xl font-bold">{orders.length}</p>
-                </div>
+              <Package className="w-8 h-8 text-primary" />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Orders</p>
+                <p className="text-2xl font-bold">{orders.length}</p>
               </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-4">
-                <Crown className="h-10 w-10 text-purple-500" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Revenue</p>
-                  <p className="text-2xl font-bold">
-                    ${orders.reduce((sum, order) => sum + Number(order.total_amount), 0).toFixed(2)}
-                  </p>
-                </div>
+              <ShoppingCart className="w-8 h-8 text-primary" />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Revenue</p>
+                <p className="text-2xl font-bold">${totalRevenue.toFixed(2)}</p>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+              <DollarSign className="w-8 h-8 text-primary" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
-        {/* Management Tabs */}
-        <Tabs defaultValue="users" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-7">
-            <TabsTrigger value="users">
-              <Users className="w-4 h-4 mr-2" />
-              Users
-            </TabsTrigger>
-            <TabsTrigger value="products">
-              <Package className="w-4 h-4 mr-2" />
-              Products
-            </TabsTrigger>
-            <TabsTrigger value="orders">
-              <ShoppingCart className="w-4 h-4 mr-2" />
-              Orders
-            </TabsTrigger>
-            <TabsTrigger value="payments">
-              <CreditCard className="w-4 h-4 mr-2" />
-              Payments
-            </TabsTrigger>
-            <TabsTrigger value="transactions">
-              <DollarSign className="w-4 h-4 mr-2" />
-              Transactions
-            </TabsTrigger>
-            <TabsTrigger value="rcon">
-              <Terminal className="w-4 h-4 mr-2" />
-              RCON
-            </TabsTrigger>
-            <TabsTrigger value="settings">
-              <Settings className="w-4 h-4 mr-2" />
-              Settings
-            </TabsTrigger>
-          </TabsList>
+      <Tabs defaultValue="users" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-7">
+          <TabsTrigger value="users">Users</TabsTrigger>
+          <TabsTrigger value="products">Products</TabsTrigger>
+          <TabsTrigger value="orders">Orders</TabsTrigger>
+          <TabsTrigger value="payments">Payments</TabsTrigger>
+          <TabsTrigger value="transactions">Transactions</TabsTrigger>
+          <TabsTrigger value="rcon">RCON</TabsTrigger>
+          <TabsTrigger value="settings">Settings</TabsTrigger>
+        </TabsList>
 
-          {/* Users Management */}
-          <TabsContent value="users">
-            <Card>
-              <CardHeader>
-                <CardTitle>User Management</CardTitle>
-                <CardDescription>Manage user accounts and permissions</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>User</TableHead>
-                      <TableHead>Minecraft Username</TableHead>
-                      <TableHead>Coins</TableHead>
-                      <TableHead>Rank</TableHead>
-                      <TableHead>Role</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
+        {/* Users Tab */}
+        <TabsContent value="users">
+          <Card>
+            <CardHeader>
+              <CardTitle>User Management</CardTitle>
+              <CardDescription>Manage user roles and permissions</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left p-2">Display Name</th>
+                      <th className="text-left p-2">Minecraft Username</th>
+                      <th className="text-left p-2">Role</th>
+                      <th className="text-left p-2">Joined</th>
+                      <th className="text-left p-2">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
                     {users.map((user) => (
-                      <TableRow key={user.user_id}>
-                        <TableCell>
-                          <div>
-                            <p className="font-medium">{user.display_name || 'Unknown'}</p>
-                            <p className="text-sm text-muted-foreground">{user.user_id.substring(0, 8)}...</p>
-                          </div>
-                        </TableCell>
-                        <TableCell>{user.minecraft_username || 'N/A'}</TableCell>
-                        <TableCell>{user.coins || 0}</TableCell>
-                        <TableCell>
-                          <Badge variant="secondary">{user.rank || 'Member'}</Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={
-                            user.role === 'admin' ? 'destructive' :
-                            user.role === 'moderator' ? 'default' : 'secondary'
-                          }>
+                      <tr key={user.id} className="border-b">
+                        <td className="p-2">{user.display_name || 'N/A'}</td>
+                        <td className="p-2">{user.minecraft_username || 'N/A'}</td>
+                        <td className="p-2">
+                          <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
                             {user.role || 'user'}
                           </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Select 
-                            defaultValue={user.role || 'user'}
+                        </td>
+                        <td className="p-2">{new Date(user.created_at).toLocaleDateString()}</td>
+                        <td className="p-2">
+                          <Select
+                            value={user.role || 'user'}
                             onValueChange={(value) => updateUserRole(user.user_id, value)}
                           >
-                            <SelectTrigger className="w-32">
+                            <SelectTrigger className="w-24">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -668,533 +599,401 @@ const AdminDashboard = () => {
                               <SelectItem value="admin">Admin</SelectItem>
                             </SelectContent>
                           </Select>
-                        </TableCell>
-                      </TableRow>
+                        </td>
+                      </tr>
                     ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </TabsContent>
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-          {/* Products Management */}
-          <TabsContent value="products">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
+        {/* Products Tab */}
+        <TabsContent value="products">
+          <Card>
+            <CardHeader>
+              <div className="flex justify-between items-center">
                 <div>
                   <CardTitle>Product Management</CardTitle>
                   <CardDescription>Manage store products and pricing</CardDescription>
                 </div>
-                <Dialog open={showProductDialog} onOpenChange={setShowProductDialog}>
-                  <DialogTrigger asChild>
-                    <Button onClick={() => {
-                      setEditingProduct(null);
-                      setProductForm({
-                        name: '',
-                        description: '',
-                        price: '',
-                        category: '',
-                        tier: '',
-                        features: '',
-                        is_active: true,
-                        is_popular: false
-                      });
-                    }}>
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Product
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-md">
-                    <DialogHeader>
-                      <DialogTitle>{editingProduct ? 'Edit Product' : 'Add New Product'}</DialogTitle>
-                      <DialogDescription>
-                        {editingProduct ? 'Update product details' : 'Create a new product for the store'}
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                      <div>
-                        <Label htmlFor="name">Product Name</Label>
-                        <Input
-                          id="name"
-                          value={productForm.name}
-                          onChange={(e) => setProductForm(prev => ({ ...prev, name: e.target.value }))}
-                          placeholder="Enter product name"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="description">Description</Label>
-                        <Textarea
-                          id="description"
-                          value={productForm.description}
-                          onChange={(e) => setProductForm(prev => ({ ...prev, description: e.target.value }))}
-                          placeholder="Enter product description"
-                        />
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <Label htmlFor="price">Price ($)</Label>
-                          <Input
-                            id="price"
-                            type="number"
-                            step="0.01"
-                            value={productForm.price}
-                            onChange={(e) => setProductForm(prev => ({ ...prev, price: e.target.value }))}
-                            placeholder="0.00"
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="category">Category</Label>
-                          <Select value={productForm.category} onValueChange={(value) => setProductForm(prev => ({ ...prev, category: value }))}>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select category" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="ranks">Ranks</SelectItem>
-                              <SelectItem value="kits">Kits</SelectItem>
-                              <SelectItem value="cosmetics">Cosmetics</SelectItem>
-                              <SelectItem value="perks">Perks</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                      <div>
-                        <Label htmlFor="tier">Tier</Label>
-                        <Input
-                          id="tier"
-                          value={productForm.tier}
-                          onChange={(e) => setProductForm(prev => ({ ...prev, tier: e.target.value }))}
-                          placeholder="e.g., VIP, Elite, Premium"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="features">Features (comma-separated)</Label>
-                        <Textarea
-                          id="features"
-                          value={productForm.features}
-                          onChange={(e) => setProductForm(prev => ({ ...prev, features: e.target.value }))}
-                          placeholder="Feature 1, Feature 2, Feature 3"
-                        />
-                      </div>
-                      <div className="flex items-center space-x-4">
-                        <label className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            checked={productForm.is_active}
-                            onChange={(e) => setProductForm(prev => ({ ...prev, is_active: e.target.checked }))}
-                          />
-                          <span>Active</span>
-                        </label>
-                        <label className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            checked={productForm.is_popular}
-                            onChange={(e) => setProductForm(prev => ({ ...prev, is_popular: e.target.checked }))}
-                          />
-                          <span>Popular</span>
-                        </label>
-                      </div>
-                    </div>
-                    <DialogFooter>
-                      <Button variant="outline" onClick={() => setShowProductDialog(false)}>
-                        Cancel
-                      </Button>
-                      <Button onClick={saveProduct}>
-                        <Save className="w-4 h-4 mr-2" />
-                        {editingProduct ? 'Update' : 'Create'}
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Product</TableHead>
-                      <TableHead>Price</TableHead>
-                      <TableHead>Category</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Popular</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
+                <Button onClick={() => {
+                  setEditingProduct(null);
+                  setProductForm({
+                    name: '',
+                    description: '',
+                    price: '',
+                    category: '',
+                    tier: '',
+                    features: '',
+                    is_active: true,
+                    is_popular: false
+                  });
+                  setShowProductDialog(true);
+                }}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Product
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left p-2">Name</th>
+                      <th className="text-left p-2">Price</th>
+                      <th className="text-left p-2">Category</th>
+                      <th className="text-left p-2">Status</th>
+                      <th className="text-left p-2">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
                     {products.map((product) => (
-                      <TableRow key={product.id}>
-                        <TableCell>
-                          <div>
-                            <p className="font-medium">{product.name}</p>
-                            <p className="text-sm text-muted-foreground">{product.description}</p>
-                          </div>
-                        </TableCell>
-                        <TableCell>${product.price}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{product.category}</Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={product.is_active ? 'default' : 'secondary'}>
+                      <tr key={product.id} className="border-b">
+                        <td className="p-2 font-medium">{product.name}</td>
+                        <td className="p-2">${product.price}</td>
+                        <td className="p-2">{product.category}</td>
+                        <td className="p-2">
+                          <Badge variant={product.is_active ? "default" : "secondary"}>
                             {product.is_active ? 'Active' : 'Inactive'}
                           </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {product.is_popular ? (
-                            <Badge variant="destructive">Popular</Badge>
-                          ) : (
-                            <span className="text-muted-foreground">No</span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex space-x-2">
+                        </td>
+                        <td className="p-2">
+                          <div className="flex gap-2">
                             <Button
                               variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setEditingProduct(product);
+                                setProductForm({
+                                  name: product.name,
+                                  description: product.description || '',
+                                  price: product.price.toString(),
+                                  category: product.category,
+                                  tier: product.tier || '',
+                                  features: product.features?.join(', ') || '',
+                                  is_active: product.is_active,
+                                  is_popular: product.is_popular
+                                });
+                                setShowProductDialog(true);
+                              }}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant={product.is_active ? "secondary" : "default"}
                               size="sm"
                               onClick={() => toggleProductStatus(product.id, product.is_active)}
                             >
-                              {product.is_active ? (
-                                <ToggleRight className="w-4 h-4" />
-                              ) : (
-                                <ToggleLeft className="w-4 h-4" />
-                              )}
-                            </Button>
-                            <Button variant="outline" size="sm" onClick={() => openEditProduct(product)}>
-                              <Edit className="w-4 h-4" />
+                              {product.is_active ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                             </Button>
                             <Button
-                              variant="outline"
+                              variant="destructive"
                               size="sm"
                               onClick={() => deleteProduct(product.id)}
-                              className="text-destructive hover:text-destructive"
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>
                           </div>
-                        </TableCell>
-                      </TableRow>
+                        </td>
+                      </tr>
                     ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </TabsContent>
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-          {/* Orders Management */}
-          <TabsContent value="orders">
-            <Card>
-              <CardHeader>
-                <CardTitle>Order Management</CardTitle>
-                <CardDescription>View and manage customer orders</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Order ID</TableHead>
-                      <TableHead>Customer ID</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
+        {/* Orders Tab */}
+        <TabsContent value="orders">
+          <Card>
+            <CardHeader>
+              <CardTitle>Order Management</CardTitle>
+              <CardDescription>View and manage customer orders</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left p-2">Order ID</th>
+                      <th className="text-left p-2">Amount</th>
+                      <th className="text-left p-2">Status</th>
+                      <th className="text-left p-2">Fulfillment</th>
+                      <th className="text-left p-2">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
                     {orders.map((order) => (
-                      <TableRow key={order.id}>
-                        <TableCell className="font-mono text-sm">
-                          {order.id.substring(0, 8)}...
-                        </TableCell>
-                        <TableCell className="font-mono text-sm">
-                          {order.user_id.substring(0, 8)}...
-                        </TableCell>
-                        <TableCell>${order.total_amount}</TableCell>
-                        <TableCell>
-                          <Badge variant={
-                            order.status === 'completed' ? 'default' :
-                            order.status === 'pending' ? 'secondary' : 'destructive'
-                          }>
+                      <tr key={order.id} className="border-b">
+                        <td className="p-2 font-mono text-sm">{order.id.slice(0, 8)}...</td>
+                        <td className="p-2">${order.total_amount}</td>
+                        <td className="p-2">
+                          <Badge variant={order.status === 'completed' ? 'default' : 'secondary'}>
                             {order.status}
                           </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {new Date(order.created_at).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell>
-                          <Button variant="outline" size="sm">
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
+                        </td>
+                        <td className="p-2">
+                          <Badge variant={order.fulfillment_status === 'fulfilled' ? 'default' : 'secondary'}>
+                            {order.fulfillment_status}
+                          </Badge>
+                        </td>
+                        <td className="p-2">{new Date(order.created_at).toLocaleDateString()}</td>
+                      </tr>
                     ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </TabsContent>
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-          {/* Payment Plans Management */}
-          <TabsContent value="payments">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
+        {/* Payment Plans Tab */}
+        <TabsContent value="payments">
+          <Card>
+            <CardHeader>
+              <div className="flex justify-between items-center">
                 <div>
-                  <CardTitle>Payment Plans Management</CardTitle>
-                  <CardDescription>Manage subscription plans and one-time payments</CardDescription>
+                  <CardTitle>Payment Plans</CardTitle>
+                  <CardDescription>Manage subscription plans and pricing</CardDescription>
                 </div>
-                <Dialog open={showPlanDialog} onOpenChange={setShowPlanDialog}>
-                  <DialogTrigger asChild>
-                    <Button onClick={() => {
-                      setEditingPlan(null);
-                      setPlanForm({
-                        name: '',
-                        description: '',
-                        amount: '',
-                        interval: 'month',
-                        features: '',
-                        rcon_commands: '',
-                        is_active: true
-                      });
-                    }}>
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Payment Plan
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-md">
-                    <DialogHeader>
-                      <DialogTitle>{editingPlan ? 'Edit Payment Plan' : 'Add New Payment Plan'}</DialogTitle>
-                      <DialogDescription>
-                        {editingPlan ? 'Update payment plan details' : 'Create a new payment plan'}
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                      <div>
-                        <Label htmlFor="plan-name">Plan Name</Label>
-                        <Input
-                          id="plan-name"
-                          value={planForm.name}
-                          onChange={(e) => setPlanForm(prev => ({ ...prev, name: e.target.value }))}
-                          placeholder="Enter plan name"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="plan-description">Description</Label>
-                        <Textarea
-                          id="plan-description"
-                          value={planForm.description}
-                          onChange={(e) => setPlanForm(prev => ({ ...prev, description: e.target.value }))}
-                          placeholder="Enter plan description"
-                        />
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <Label htmlFor="plan-amount">Amount ($)</Label>
-                          <Input
-                            id="plan-amount"
-                            type="number"
-                            step="0.01"
-                            value={planForm.amount}
-                            onChange={(e) => setPlanForm(prev => ({ ...prev, amount: e.target.value }))}
-                            placeholder="0.00"
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="plan-interval">Billing Interval</Label>
-                          <Select value={planForm.interval} onValueChange={(value) => setPlanForm(prev => ({ ...prev, interval: value }))}>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select interval" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="month">Monthly</SelectItem>
-                              <SelectItem value="year">Yearly</SelectItem>
-                              <SelectItem value="one_time">One Time</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                      <div>
-                        <Label htmlFor="plan-features">Features (comma-separated)</Label>
-                        <Textarea
-                          id="plan-features"
-                          value={planForm.features}
-                          onChange={(e) => setPlanForm(prev => ({ ...prev, features: e.target.value }))}
-                          placeholder="Feature 1, Feature 2, Feature 3"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="plan-rcon">RCON Commands (comma-separated)</Label>
-                        <Textarea
-                          id="plan-rcon"
-                          value={planForm.rcon_commands}
-                          onChange={(e) => setPlanForm(prev => ({ ...prev, rcon_commands: e.target.value }))}
-                          placeholder="lp user {username} parent set vip, kit vip {username}"
-                        />
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={planForm.is_active}
-                          onChange={(e) => setPlanForm(prev => ({ ...prev, is_active: e.target.checked }))}
-                        />
-                        <span>Active</span>
-                      </div>
-                    </div>
-                    <DialogFooter>
-                      <Button variant="outline" onClick={() => setShowPlanDialog(false)}>
-                        Cancel
-                      </Button>
-                      <Button onClick={savePlan}>
-                        <Save className="w-4 h-4 mr-2" />
-                        {editingPlan ? 'Update' : 'Create'}
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Plan Name</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead>Interval</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Features</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
+                <Button onClick={() => {
+                  setEditingPlan(null);
+                  setPlanForm({
+                    name: '',
+                    description: '',
+                    amount: '',
+                    interval: 'month',
+                    features: '',
+                    rcon_commands: '',
+                    is_active: true
+                  });
+                  setShowPlanDialog(true);
+                }}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Plan
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left p-2">Name</th>
+                      <th className="text-left p-2">Price</th>
+                      <th className="text-left p-2">Interval</th>
+                      <th className="text-left p-2">Status</th>
+                      <th className="text-left p-2">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
                     {paymentPlans.map((plan) => (
-                      <TableRow key={plan.id}>
-                        <TableCell>
-                          <div>
-                            <p className="font-medium">{plan.name}</p>
-                            <p className="text-sm text-muted-foreground">{plan.description}</p>
-                          </div>
-                        </TableCell>
-                        <TableCell>${plan.amount}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{plan.interval}</Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={plan.is_active ? 'default' : 'secondary'}>
+                      <tr key={plan.id} className="border-b">
+                        <td className="p-2 font-medium">{plan.name}</td>
+                        <td className="p-2">${plan.amount}</td>
+                        <td className="p-2">{plan.interval}</td>
+                        <td className="p-2">
+                          <Badge variant={plan.is_active ? "default" : "secondary"}>
                             {plan.is_active ? 'Active' : 'Inactive'}
                           </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="text-sm">
-                            {plan.features?.slice(0, 2).map((feature, i) => (
-                              <div key={i}>{feature}</div>
-                            ))}
-                            {plan.features?.length > 2 && (
-                              <div className="text-muted-foreground">+{plan.features.length - 2} more</div>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex space-x-2">
+                        </td>
+                        <td className="p-2">
+                          <div className="flex gap-2">
                             <Button
                               variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setEditingPlan(plan);
+                                setPlanForm({
+                                  name: plan.name,
+                                  description: plan.description || '',
+                                  amount: plan.amount.toString(),
+                                  interval: plan.interval,
+                                  features: plan.features?.join(', ') || '',
+                                  rcon_commands: plan.rcon_commands?.join(', ') || '',
+                                  is_active: plan.is_active
+                                });
+                                setShowPlanDialog(true);
+                              }}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant={plan.is_active ? "secondary" : "default"}
                               size="sm"
                               onClick={() => togglePlanStatus(plan.id, plan.is_active)}
                             >
-                              {plan.is_active ? (
-                                <ToggleRight className="w-4 h-4" />
-                              ) : (
-                                <ToggleLeft className="w-4 h-4" />
-                              )}
-                            </Button>
-                            <Button variant="outline" size="sm" onClick={() => openEditPlan(plan)}>
-                              <Edit className="w-4 h-4" />
+                              {plan.is_active ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                             </Button>
                             <Button
-                              variant="outline"
+                              variant="destructive"
                               size="sm"
                               onClick={() => deletePlan(plan.id)}
-                              className="text-destructive hover:text-destructive"
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>
                           </div>
-                        </TableCell>
-                      </TableRow>
+                        </td>
+                      </tr>
                     ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </TabsContent>
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-          {/* Transactions Management */}
-          <TabsContent value="transactions">
-            <Card>
-              <CardHeader>
-                <CardTitle>Payment Transactions</CardTitle>
-                <CardDescription>View and monitor all payment transactions</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Transaction ID</TableHead>
-                      <TableHead>Customer</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
+        {/* Transactions Tab */}
+        <TabsContent value="transactions">
+          <Card>
+            <CardHeader>
+              <CardTitle>Payment Transactions</CardTitle>
+              <CardDescription>View all payment transactions</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left p-2">Transaction ID</th>
+                      <th className="text-left p-2">Amount</th>
+                      <th className="text-left p-2">Status</th>
+                      <th className="text-left p-2">Payment Method</th>
+                      <th className="text-left p-2">Customer</th>
+                      <th className="text-left p-2">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
                     {transactions.map((transaction) => (
-                      <TableRow key={transaction.id}>
-                        <TableCell className="font-mono text-sm">
-                          {transaction.id.substring(0, 8)}...
-                        </TableCell>
-                        <TableCell>{transaction.customer_email}</TableCell>
-                        <TableCell>${transaction.amount} {transaction.currency.toUpperCase()}</TableCell>
-                        <TableCell>
-                          <Badge variant={
-                            transaction.status === 'completed' ? 'default' :
-                            transaction.status === 'pending' ? 'secondary' : 'destructive'
-                          }>
+                      <tr key={transaction.id} className="border-b">
+                        <td className="p-2 font-mono text-sm">{transaction.id.slice(0, 8)}...</td>
+                        <td className="p-2">${transaction.amount}</td>
+                        <td className="p-2">
+                          <Badge variant={transaction.status === 'completed' ? 'default' : 'secondary'}>
                             {transaction.status}
                           </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {new Date(transaction.created_at).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell>
-                          <Button variant="outline" size="sm">
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
+                        </td>
+                        <td className="p-2">{transaction.payment_method || 'N/A'}</td>
+                        <td className="p-2">{transaction.customer_email || 'N/A'}</td>
+                        <td className="p-2">{new Date(transaction.created_at).toLocaleDateString()}</td>
+                      </tr>
                     ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </TabsContent>
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-          {/* RCON Management */}
-          <TabsContent value="rcon">
+        {/* RCON Commands */}
+        <TabsContent value="rcon">
+          <div className="space-y-6">
+            {/* RCON Servers Management */}
             <Card>
               <CardHeader>
-                <CardTitle>RCON Console</CardTitle>
-                <CardDescription>Execute Minecraft server commands remotely</CardDescription>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <Server className="w-5 h-5" />
+                      RCON Servers
+                    </CardTitle>
+                    <CardDescription>Manage your Minecraft server RCON connections</CardDescription>
+                  </div>
+                  <Button onClick={() => {
+                    setEditingServer({ name: '', host: 'localhost', port: 25575, password: '', is_active: true });
+                    setShowServerDialog(true);
+                  }}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Server
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left p-2">Name</th>
+                        <th className="text-left p-2">Host</th>
+                        <th className="text-left p-2">Port</th>
+                        <th className="text-left p-2">Status</th>
+                        <th className="text-left p-2">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rconServers.map((server) => (
+                        <tr key={server.id} className="border-b">
+                          <td className="p-2 font-medium">{server.name}</td>
+                          <td className="p-2">{server.host}</td>
+                          <td className="p-2">{server.port}</td>
+                          <td className="p-2">
+                            <Badge variant={server.is_active ? "default" : "secondary"}>
+                              {server.is_active ? 'Active' : 'Inactive'}
+                            </Badge>
+                          </td>
+                          <td className="p-2">
+                            <div className="flex gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setEditingServer(server);
+                                  setShowServerDialog(true);
+                                }}
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => deleteRconServer(server.id)}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* RCON Console */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Terminal className="w-5 h-5" />
+                  RCON Console
+                </CardTitle>
+                <CardDescription>Execute commands on your Minecraft servers</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="rcon-output">Console Output</Label>
-                  <Textarea
-                    id="rcon-output"
-                    value={rconOutput}
-                    readOnly
-                    className="min-h-[300px] font-mono text-sm bg-black text-green-400 border-0"
-                    placeholder="RCON output will appear here..."
-                  />
+                <div className="flex gap-4 items-center">
+                  <label className="text-sm font-medium">Server:</label>
+                  <select 
+                    value={selectedServer} 
+                    onChange={(e) => setSelectedServer(e.target.value)}
+                    className="px-3 py-1 border rounded-md"
+                  >
+                    {rconServers.filter(s => s.is_active).map(server => (
+                      <option key={server.id} value={server.name}>{server.name}</option>
+                    ))}
+                  </select>
                 </div>
-                <div className="flex space-x-2">
-                  <div className="flex-1">
-                    <Label htmlFor="rcon-command">Command</Label>
+                
+                <div className="bg-black text-green-400 font-mono p-4 rounded-lg h-48 overflow-y-auto whitespace-pre-wrap">
+                  {rconOutput || 'RCON Console - Ready for commands...\n'}
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="flex gap-2">
                     <Input
-                      id="rcon-command"
                       value={rconCommand}
                       onChange={(e) => setRconCommand(e.target.value)}
                       placeholder="Enter RCON command (e.g., list, say Hello World)"
@@ -1204,13 +1003,14 @@ const AdminDashboard = () => {
                   </div>
                   <Button 
                     onClick={executeRconCommand} 
-                    disabled={rconLoading || !rconCommand.trim()}
+                    disabled={rconLoading || !rconCommand.trim() || rconServers.filter(s => s.is_active).length === 0}
                     className="mt-6"
                   >
                     <Terminal className="w-4 h-4 mr-2" />
                     Execute
                   </Button>
                 </div>
+                
                 <div className="flex space-x-2">
                   <Button
                     variant="outline"
@@ -1241,52 +1041,320 @@ const AdminDashboard = () => {
                     Clear Output
                   </Button>
                 </div>
+                
                 <div className="text-sm text-muted-foreground">
                   <p><strong>Warning:</strong> Use RCON commands carefully. Some commands can affect server performance or player experience.</p>
                   <p><strong>Common commands:</strong> list, tps, save-all, whitelist, ban, kick, say, give</p>
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
+          </div>
+        </TabsContent>
 
-          {/* Settings */}
-          <TabsContent value="settings">
-            <Card>
-              <CardHeader>
-                <CardTitle>System Settings</CardTitle>
-                <CardDescription>Configure system-wide settings</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <Card>
-                    <CardContent className="p-4">
-                      <h4 className="font-semibold mb-2">Server Management</h4>
-                      <p className="text-sm text-muted-foreground mb-4">
-                        Manage Minecraft server settings and RCON
-                      </p>
-                      <Button variant="outline" className="w-full">
-                        Configure RCON
-                      </Button>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card>
-                    <CardContent className="p-4">
-                      <h4 className="font-semibold mb-2">Payment Settings</h4>
-                      <p className="text-sm text-muted-foreground mb-4">
-                        Configure payment gateways and pricing
-                      </p>
-                      <Button variant="outline" className="w-full">
-                        Payment Config
-                      </Button>
-                    </CardContent>
-                  </Card>
+        {/* Settings */}
+        <TabsContent value="settings">
+          <Card>
+            <CardHeader>
+              <CardTitle>System Settings</CardTitle>
+              <CardDescription>Configure system-wide settings</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <Card>
+                  <CardContent className="p-4">
+                    <h4 className="font-semibold mb-2">Server Management</h4>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Manage Minecraft server settings and RCON
+                    </p>
+                    <Button variant="outline" className="w-full">
+                      Configure RCON
+                    </Button>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardContent className="p-4">
+                    <h4 className="font-semibold mb-2">Payment Settings</h4>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Configure payment gateways and pricing
+                    </p>
+                    <Button variant="outline" className="w-full">
+                      Payment Config
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      {/* Product Dialog */}
+      <Dialog open={showProductDialog} onOpenChange={setShowProductDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              {editingProduct ? 'Edit Product' : 'Add New Product'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="name">Product Name</Label>
+                <Input
+                  id="name"
+                  value={productForm.name}
+                  onChange={(e) => setProductForm({...productForm, name: e.target.value})}
+                />
+              </div>
+              <div>
+                <Label htmlFor="price">Price ($)</Label>
+                <Input
+                  id="price"
+                  type="number"
+                  step="0.01"
+                  value={productForm.price}
+                  onChange={(e) => setProductForm({...productForm, price: e.target.value})}
+                />
+              </div>
+              <div>
+                <Label htmlFor="category">Category</Label>
+                <Select 
+                  value={productForm.category} 
+                  onValueChange={(value) => setProductForm({...productForm, category: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ranks">Ranks</SelectItem>
+                    <SelectItem value="coins">Coins</SelectItem>
+                    <SelectItem value="items">Items</SelectItem>
+                    <SelectItem value="perks">Perks</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="tier">Tier</Label>
+                <Input
+                  id="tier"
+                  value={productForm.tier}
+                  onChange={(e) => setProductForm({...productForm, tier: e.target.value})}
+                  placeholder="e.g., Basic, Premium, VIP"
+                />
+              </div>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  value={productForm.description}
+                  onChange={(e) => setProductForm({...productForm, description: e.target.value})}
+                  rows={3}
+                />
+              </div>
+              <div>
+                <Label htmlFor="features">Features (comma-separated)</Label>
+                <Textarea
+                  id="features"
+                  value={productForm.features}
+                  onChange={(e) => setProductForm({...productForm, features: e.target.value})}
+                  placeholder="Feature 1, Feature 2, Feature 3"
+                  rows={3}
+                />
+              </div>
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="isActive"
+                    checked={productForm.is_active}
+                    onCheckedChange={(checked) => setProductForm({...productForm, is_active: checked})}
+                  />
+                  <Label htmlFor="isActive">Active</Label>
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </div>
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="isPopular"
+                    checked={productForm.is_popular}
+                    onCheckedChange={(checked) => setProductForm({...productForm, is_popular: checked})}
+                  />
+                  <Label htmlFor="isPopular">Popular</Label>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="flex justify-end space-x-2 mt-6">
+            <Button variant="outline" onClick={() => setShowProductDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={saveProduct}>
+              {editingProduct ? 'Update' : 'Create'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Payment Plan Dialog */}
+      <Dialog open={showPlanDialog} onOpenChange={setShowPlanDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              {editingPlan ? 'Edit Payment Plan' : 'Add New Payment Plan'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="planName">Plan Name</Label>
+                <Input
+                  id="planName"
+                  value={planForm.name}
+                  onChange={(e) => setPlanForm({...planForm, name: e.target.value})}
+                />
+              </div>
+              <div>
+                <Label htmlFor="planAmount">Amount ($)</Label>
+                <Input
+                  id="planAmount"
+                  type="number"
+                  step="0.01"
+                  value={planForm.amount}
+                  onChange={(e) => setPlanForm({...planForm, amount: e.target.value})}
+                />
+              </div>
+              <div>
+                <Label htmlFor="planInterval">Billing Interval</Label>
+                <Select 
+                  value={planForm.interval} 
+                  onValueChange={(value) => setPlanForm({...planForm, interval: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="month">Monthly</SelectItem>
+                    <SelectItem value="year">Yearly</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="planActive"
+                  checked={planForm.is_active}
+                  onCheckedChange={(checked) => setPlanForm({...planForm, is_active: checked})}
+                />
+                <Label htmlFor="planActive">Active</Label>
+              </div>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="planDescription">Description</Label>
+                <Textarea
+                  id="planDescription"
+                  value={planForm.description}
+                  onChange={(e) => setPlanForm({...planForm, description: e.target.value})}
+                  rows={2}
+                />
+              </div>
+              <div>
+                <Label htmlFor="planFeatures">Features (comma-separated)</Label>
+                <Textarea
+                  id="planFeatures"
+                  value={planForm.features}
+                  onChange={(e) => setPlanForm({...planForm, features: e.target.value})}
+                  placeholder="Feature 1, Feature 2, Feature 3"
+                  rows={3}
+                />
+              </div>
+              <div>
+                <Label htmlFor="rconCommands">RCON Commands (comma-separated)</Label>
+                <Textarea
+                  id="rconCommands"
+                  value={planForm.rcon_commands}
+                  onChange={(e) => setPlanForm({...planForm, rcon_commands: e.target.value})}
+                  placeholder="give {username} diamond 64, tp {username} spawn"
+                  rows={2}
+                />
+              </div>
+            </div>
+          </div>
+          <div className="flex justify-end space-x-2 mt-6">
+            <Button variant="outline" onClick={() => setShowPlanDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={savePlan}>
+              {editingPlan ? 'Update' : 'Create'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* RCON Server Dialog */}
+      <Dialog open={showServerDialog} onOpenChange={setShowServerDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {editingServer?.id ? 'Edit RCON Server' : 'Add RCON Server'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="serverName">Server Name</Label>
+              <Input
+                id="serverName"
+                value={editingServer?.name || ''}
+                onChange={(e) => setEditingServer({...editingServer, name: e.target.value})}
+                placeholder="e.g., main, creative, survival"
+              />
+            </div>
+            <div>
+              <Label htmlFor="serverHost">Host</Label>
+              <Input
+                id="serverHost"
+                value={editingServer?.host || ''}
+                onChange={(e) => setEditingServer({...editingServer, host: e.target.value})}
+                placeholder="localhost or server IP"
+              />
+            </div>
+            <div>
+              <Label htmlFor="serverPort">Port</Label>
+              <Input
+                id="serverPort"
+                type="number"
+                value={editingServer?.port || 25575}
+                onChange={(e) => setEditingServer({...editingServer, port: parseInt(e.target.value)})}
+              />
+            </div>
+            <div>
+              <Label htmlFor="serverPassword">RCON Password</Label>
+              <Input
+                id="serverPassword"
+                type="password"
+                value={editingServer?.password || ''}
+                onChange={(e) => setEditingServer({...editingServer, password: e.target.value})}
+                placeholder="RCON password"
+              />
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="serverActive"
+                checked={editingServer?.is_active || false}
+                onCheckedChange={(checked) => setEditingServer({...editingServer, is_active: checked})}
+              />
+              <Label htmlFor="serverActive">Active</Label>
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setShowServerDialog(false)}>
+                Cancel
+              </Button>
+              <Button onClick={saveRconServer}>
+                {editingServer?.id ? 'Update' : 'Create'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
