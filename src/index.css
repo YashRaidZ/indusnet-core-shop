@@ -46,20 +46,31 @@
 
     --radius: 0.75rem;
 
-    /* Gaming gradients */
+    /* Advanced gaming gradients */
     --gradient-primary: linear-gradient(135deg, hsl(142 76% 36%), hsl(142 76% 50%));
     --gradient-gold: linear-gradient(135deg, hsl(45 100% 51%), hsl(38 100% 45%));
     --gradient-diamond: linear-gradient(135deg, hsl(200 100% 60%), hsl(210 100% 70%));
     --gradient-dark: linear-gradient(135deg, hsl(220 25% 8%), hsl(220 25% 12%));
+    --gradient-status-online: linear-gradient(135deg, hsl(142 76% 36%), hsl(120 100% 35%));
+    --gradient-status-offline: linear-gradient(135deg, hsl(0 84% 60%), hsl(15 84% 50%));
+    --gradient-glass: linear-gradient(135deg, hsl(220 25% 12% / 0.8), hsl(220 25% 15% / 0.6));
+    --gradient-card-hover: linear-gradient(135deg, hsl(220 25% 15%), hsl(220 25% 18%));
     
-    /* Gaming shadows and glows */
+    /* Enhanced gaming shadows and glows */
     --shadow-glow: 0 0 30px hsl(142 76% 36% / 0.3);
+    --shadow-glow-strong: 0 0 50px hsl(142 76% 36% / 0.5);
     --shadow-gold: 0 0 30px hsl(45 100% 51% / 0.3);
     --shadow-diamond: 0 0 30px hsl(200 100% 60% / 0.3);
+    --shadow-status-online: 0 0 20px hsl(142 76% 36% / 0.4);
+    --shadow-status-offline: 0 0 20px hsl(0 84% 60% / 0.4);
+    --shadow-card: 0 8px 32px hsl(220 25% 8% / 0.5);
+    --shadow-card-hover: 0 12px 48px hsl(220 25% 8% / 0.7);
     
-    /* Smooth gaming transitions */
+    /* Advanced gaming transitions */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-glow: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    --transition-spring: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 
     --sidebar-background: 0 0% 98%;
 
