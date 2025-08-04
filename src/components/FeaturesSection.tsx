@@ -54,19 +54,19 @@ const FeaturesSection = () => {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8">
           {features.map((feature, index) => {
             const Icon = feature.icon;
             return (
-              <Card key={index} className="p-6 hover:shadow-glow transition-all duration-300 hover:scale-105 bg-card border-border group">
-                <div className="space-y-4">
+              <Card key={index} className="p-4 sm:p-6 hover:shadow-glow transition-all duration-300 hover:scale-105 bg-card border-border group">
+                <div className="space-y-3 sm:space-y-4">
                   <div className="flex items-center space-x-3">
-                    <div className="flex items-center justify-center w-12 h-12 bg-gradient-primary rounded-lg group-hover:scale-110 transition-transform">
-                      <Icon className={`h-6 w-6 text-primary-foreground`} />
+                    <div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 bg-gradient-primary rounded-lg group-hover:scale-110 transition-transform flex-shrink-0">
+                      <Icon className={`h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground`} />
                     </div>
-                    <h3 className="text-lg font-bold text-foreground">{feature.title}</h3>
+                    <h3 className="text-base sm:text-lg font-bold text-foreground">{feature.title}</h3>
                   </div>
-                  <p className="text-muted-foreground leading-relaxed">
+                  <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
                     {feature.description}
                   </p>
                 </div>

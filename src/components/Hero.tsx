@@ -29,36 +29,36 @@ const Hero = () => {
           </div>
 
           {/* Server Stats */}
-          <div className="flex flex-wrap justify-center gap-8 py-6">
-            <div className="flex items-center space-x-2 bg-card/50 backdrop-blur-sm px-4 py-2 rounded-lg border border-border">
-              <Users className="h-5 w-5 text-primary" />
-              <span className="text-foreground font-semibold">2,847 Players</span>
+          <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-4 sm:gap-6 lg:gap-8 py-6">
+            <div className="flex items-center justify-center space-x-2 bg-card/50 backdrop-blur-sm px-3 sm:px-4 py-2 rounded-lg border border-border min-w-0">
+              <Users className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0" />
+              <span className="text-sm sm:text-base text-foreground font-semibold truncate">2,847 Players</span>
             </div>
-            <div className="flex items-center space-x-2 bg-card/50 backdrop-blur-sm px-4 py-2 rounded-lg border border-border">
-              <Server className="h-5 w-5 text-accent" />
-              <span className="text-foreground font-semibold">99.9% Uptime</span>
+            <div className="flex items-center justify-center space-x-2 bg-card/50 backdrop-blur-sm px-3 sm:px-4 py-2 rounded-lg border border-border min-w-0">
+              <Server className="h-4 w-4 sm:h-5 sm:w-5 text-accent flex-shrink-0" />
+              <span className="text-sm sm:text-base text-foreground font-semibold truncate">99.9% Uptime</span>
             </div>
-            <div className="flex items-center space-x-2 bg-card/50 backdrop-blur-sm px-4 py-2 rounded-lg border border-border">
-              <Play className="h-5 w-5 text-diamond" />
-              <span className="text-foreground font-semibold">play.indusnetwork.com</span>
+            <div className="flex items-center justify-center space-x-2 bg-card/50 backdrop-blur-sm px-3 sm:px-4 py-2 rounded-lg border border-border min-w-0">
+              <Play className="h-4 w-4 sm:h-5 sm:w-5 text-diamond flex-shrink-0" />
+              <span className="text-sm sm:text-base text-foreground font-semibold truncate">play.indusnetwork.com</span>
             </div>
           </div>
 
           {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <Button variant="hero" size="xl" className="group">
-              <Play className="h-5 w-5 mr-2 group-hover:scale-110 transition-transform" />
-              Join Server Now
+          <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 w-full px-4 sm:px-0">
+            <Button variant="hero" size="xl" className="group w-full sm:w-auto min-w-0">
+              <Play className="h-4 w-4 sm:h-5 sm:w-5 mr-2 group-hover:scale-110 transition-transform flex-shrink-0" />
+              <span className="truncate">Join Server Now</span>
             </Button>
-            <Button variant="outline" size="xl" className="bg-background/20 backdrop-blur-sm">
-              Explore Shop
+            <Button variant="outline" size="xl" className="bg-background/20 backdrop-blur-sm w-full sm:w-auto min-w-0">
+              <span className="truncate">Explore Shop</span>
             </Button>
           </div>
 
           {/* Server IP */}
-          <div className="bg-card/30 backdrop-blur-sm border border-border rounded-lg p-6 max-w-md mx-auto">
-            <p className="text-sm text-muted-foreground mb-2">Server IP</p>
-            <code className="text-lg font-mono text-primary bg-muted/50 px-3 py-1 rounded">
+          <div className="bg-card/30 backdrop-blur-sm border border-border rounded-lg p-4 sm:p-6 max-w-xs sm:max-w-md mx-auto">
+            <p className="text-xs sm:text-sm text-muted-foreground mb-2">Server IP</p>
+            <code className="text-sm sm:text-lg font-mono text-primary bg-muted/50 px-2 sm:px-3 py-1 rounded break-all">
               play.indusnetwork.com
             </code>
           </div>

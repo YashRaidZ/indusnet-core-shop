@@ -106,7 +106,7 @@ const ShopSection = () => {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8 mb-20">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8 mb-16 md:mb-20">
           {ranks.map((rank, index) => (
             <ProductCard key={index} {...rank} />
           ))}
@@ -122,7 +122,7 @@ const ShopSection = () => {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8">
           {coinPacks.map((pack, index) => (
             <ProductCard key={index} {...pack} />
           ))}
