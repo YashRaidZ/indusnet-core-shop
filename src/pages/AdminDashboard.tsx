@@ -545,14 +545,14 @@ export const AdminDashboard = () => {
       </div>
 
       <Tabs defaultValue="users" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-7">
-          <TabsTrigger value="users">Users</TabsTrigger>
-          <TabsTrigger value="products">Products</TabsTrigger>
-          <TabsTrigger value="orders">Orders</TabsTrigger>
-          <TabsTrigger value="payments">Payments</TabsTrigger>
-          <TabsTrigger value="transactions">Transactions</TabsTrigger>
-          <TabsTrigger value="rcon">RCON</TabsTrigger>
-          <TabsTrigger value="settings">Settings</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-1 h-auto p-1">
+          <TabsTrigger value="users" className="text-xs sm:text-sm px-2 py-2">Users</TabsTrigger>
+          <TabsTrigger value="products" className="text-xs sm:text-sm px-2 py-2">Products</TabsTrigger>
+          <TabsTrigger value="orders" className="text-xs sm:text-sm px-2 py-2">Orders</TabsTrigger>
+          <TabsTrigger value="payments" className="text-xs sm:text-sm px-2 py-2">Payments</TabsTrigger>
+          <TabsTrigger value="transactions" className="text-xs sm:text-sm px-2 py-2">Transactions</TabsTrigger>
+          <TabsTrigger value="rcon" className="text-xs sm:text-sm px-2 py-2">RCON</TabsTrigger>
+          <TabsTrigger value="settings" className="text-xs sm:text-sm px-2 py-2">Settings</TabsTrigger>
         </TabsList>
 
         {/* Users Tab */}
