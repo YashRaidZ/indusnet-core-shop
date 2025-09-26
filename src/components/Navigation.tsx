@@ -24,6 +24,8 @@ const Navigation = () => {
     { href: "#home", label: "Home" },
     { href: "#features", label: "Features" },
     { href: "#shop", label: "Shop" },
+    { href: "/leaderboards", label: "Leaderboards", isLink: true },
+    { href: "/achievements", label: "Achievements", isLink: true },
     { href: "/rules", label: "Rules", isLink: true },
     { href: "#news", label: "News" },
     { href: "/dashboard", label: "Dashboard", isLink: true },

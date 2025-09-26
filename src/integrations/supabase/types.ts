@@ -7,13 +7,52 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.12 (cd3cf9e)"
   }
   public: {
     Tables: {
+      achievements: {
+        Row: {
+          category: string
+          created_at: string | null
+          description: string | null
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          points: number | null
+          requirements: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          points?: number | null
+          requirements?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          points?: number | null
+          requirements?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       cart_items: {
         Row: {
           created_at: string
@@ -47,6 +86,45 @@ export type Database = {
           quantity?: number
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      leaderboards: {
+        Row: {
+          category: string
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          max_entries: number | null
+          name: string
+          refresh_interval: string | null
+          stat_field: string
+          updated_at: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_entries?: number | null
+          name: string
+          refresh_interval?: string | null
+          stat_field: string
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_entries?: number | null
+          name?: string
+          refresh_interval?: string | null
+          stat_field?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -260,6 +338,63 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      player_statistics: {
+        Row: {
+          blocks_broken: number | null
+          blocks_placed: number | null
+          created_at: string | null
+          deaths: number | null
+          distance_traveled: number | null
+          first_join_date: string | null
+          id: string
+          kills: number | null
+          last_activity: string | null
+          level_data: Json | null
+          total_coins_earned: number | null
+          total_playtime_hours: number | null
+          total_purchases: number | null
+          total_spent: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          blocks_broken?: number | null
+          blocks_placed?: number | null
+          created_at?: string | null
+          deaths?: number | null
+          distance_traveled?: number | null
+          first_join_date?: string | null
+          id?: string
+          kills?: number | null
+          last_activity?: string | null
+          level_data?: Json | null
+          total_coins_earned?: number | null
+          total_playtime_hours?: number | null
+          total_purchases?: number | null
+          total_spent?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          blocks_broken?: number | null
+          blocks_placed?: number | null
+          created_at?: string | null
+          deaths?: number | null
+          distance_traveled?: number | null
+          first_join_date?: string | null
+          id?: string
+          kills?: number | null
+          last_activity?: string | null
+          level_data?: Json | null
+          total_coins_earned?: number | null
+          total_playtime_hours?: number | null
+          total_purchases?: number | null
+          total_spent?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       products: {
         Row: {
@@ -494,6 +629,38 @@ export type Database = {
         }
         Relationships: []
       }
+      user_achievements: {
+        Row: {
+          achievement_id: string
+          earned_at: string | null
+          id: string
+          progress: Json | null
+          user_id: string
+        }
+        Insert: {
+          achievement_id: string
+          earned_at?: string | null
+          id?: string
+          progress?: Json | null
+          user_id: string
+        }
+        Update: {
+          achievement_id?: string
+          earned_at?: string | null
+          id?: string
+          progress?: Json | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_achievements_achievement_id_fkey"
+            columns: ["achievement_id"]
+            isOneToOne: false
+            referencedRelation: "achievements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -529,8 +696,8 @@ export type Database = {
       }
       has_role: {
         Args: {
-          _user_id: string
           _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
         }
         Returns: boolean
       }

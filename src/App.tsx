@@ -10,6 +10,8 @@ import ServerRules from "./pages/ServerRules";
 import Support from "./pages/Support";
 import Auth from "./pages/Auth";
 import AdminDashboard from "./pages/AdminDashboard";
+import Leaderboards from "./pages/Leaderboards";
+import Achievements from "./pages/Achievements";
 import NotFound from "./pages/NotFound";
 import { AdminRoute } from "./components/AdminRoute";
 import { CartProvider } from "./contexts/CartContext";
@@ -30,6 +32,8 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/leaderboards" element={<Leaderboards />} />
+            <Route path="/achievements" element={<Achievements />} />
             <Route path="/rules" element={<ServerRules />} />
             <Route path="/support" element={<Support />} />
             <Route path="/admin" element={
