@@ -24,10 +24,13 @@ const Navigation = () => {
     { href: "#home", label: "Home" },
     { href: "#features", label: "Features" },
     { href: "#shop", label: "Shop" },
+    { href: "/news", label: "News", isLink: true },
+    { href: "/events", label: "Events", isLink: true },
+    { href: "/tutorials", label: "Tutorials", isLink: true },
+    { href: "/gallery", label: "Gallery", isLink: true },
     { href: "/leaderboards", label: "Leaderboards", isLink: true },
     { href: "/achievements", label: "Achievements", isLink: true },
     { href: "/rules", label: "Rules", isLink: true },
-    { href: "#news", label: "News" },
     { href: "/dashboard", label: "Dashboard", isLink: true },
     ...(isAdmin ? [{ href: "/admin", label: "Admin", isLink: true }] : [])
   ];

@@ -89,6 +89,134 @@ export type Database = {
         }
         Relationships: []
       }
+      content_categories: {
+        Row: {
+          color: string | null
+          content_type: string
+          created_at: string | null
+          description: string | null
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          slug: string
+        }
+        Insert: {
+          color?: string | null
+          content_type: string
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          slug: string
+        }
+        Update: {
+          color?: string | null
+          content_type?: string
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          slug?: string
+        }
+        Relationships: []
+      }
+      event_participants: {
+        Row: {
+          event_id: string
+          id: string
+          registered_at: string | null
+          status: string | null
+          user_id: string
+        }
+        Insert: {
+          event_id: string
+          id?: string
+          registered_at?: string | null
+          status?: string | null
+          user_id: string
+        }
+        Update: {
+          event_id?: string
+          id?: string
+          registered_at?: string | null
+          status?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_participants_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "server_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gallery: {
+        Row: {
+          author_id: string
+          build_time: string | null
+          category: string
+          created_at: string | null
+          description: string | null
+          id: string
+          image_url: string
+          is_approved: boolean | null
+          is_featured: boolean | null
+          like_count: number | null
+          materials_used: string[] | null
+          minecraft_coordinates: string | null
+          tags: string[] | null
+          thumbnail_url: string | null
+          title: string
+          updated_at: string | null
+          view_count: number | null
+        }
+        Insert: {
+          author_id: string
+          build_time?: string | null
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url: string
+          is_approved?: boolean | null
+          is_featured?: boolean | null
+          like_count?: number | null
+          materials_used?: string[] | null
+          minecraft_coordinates?: string | null
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string | null
+          view_count?: number | null
+        }
+        Update: {
+          author_id?: string
+          build_time?: string | null
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string
+          is_approved?: boolean | null
+          is_featured?: boolean | null
+          like_count?: number | null
+          materials_used?: string[] | null
+          minecraft_coordinates?: string | null
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string | null
+          view_count?: number | null
+        }
+        Relationships: []
+      }
       leaderboards: {
         Row: {
           category: string
@@ -125,6 +253,60 @@ export type Database = {
           refresh_interval?: string | null
           stat_field?: string
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      news_articles: {
+        Row: {
+          author_id: string
+          category: string
+          content: string
+          created_at: string | null
+          excerpt: string | null
+          featured_image: string | null
+          id: string
+          is_featured: boolean | null
+          is_published: boolean | null
+          published_at: string | null
+          slug: string
+          tags: string[] | null
+          title: string
+          updated_at: string | null
+          view_count: number | null
+        }
+        Insert: {
+          author_id: string
+          category?: string
+          content: string
+          created_at?: string | null
+          excerpt?: string | null
+          featured_image?: string | null
+          id?: string
+          is_featured?: boolean | null
+          is_published?: boolean | null
+          published_at?: string | null
+          slug: string
+          tags?: string[] | null
+          title: string
+          updated_at?: string | null
+          view_count?: number | null
+        }
+        Update: {
+          author_id?: string
+          category?: string
+          content?: string
+          created_at?: string | null
+          excerpt?: string | null
+          featured_image?: string | null
+          id?: string
+          is_featured?: boolean | null
+          is_published?: boolean | null
+          published_at?: string | null
+          slug?: string
+          tags?: string[] | null
+          title?: string
+          updated_at?: string | null
+          view_count?: number | null
         }
         Relationships: []
       }
@@ -546,6 +728,60 @@ export type Database = {
         }
         Relationships: []
       }
+      server_events: {
+        Row: {
+          created_at: string | null
+          created_by: string
+          current_participants: number | null
+          description: string | null
+          end_date: string | null
+          event_type: string
+          id: string
+          is_active: boolean | null
+          location: string | null
+          max_participants: number | null
+          requirements: string[] | null
+          rewards: string[] | null
+          start_date: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by: string
+          current_participants?: number | null
+          description?: string | null
+          end_date?: string | null
+          event_type?: string
+          id?: string
+          is_active?: boolean | null
+          location?: string | null
+          max_participants?: number | null
+          requirements?: string[] | null
+          rewards?: string[] | null
+          start_date: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string
+          current_participants?: number | null
+          description?: string | null
+          end_date?: string | null
+          event_type?: string
+          id?: string
+          is_active?: boolean | null
+          location?: string | null
+          max_participants?: number | null
+          requirements?: string[] | null
+          rewards?: string[] | null
+          start_date?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       subscribers: {
         Row: {
           created_at: string
@@ -626,6 +862,110 @@ export type Database = {
           title?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      tutorial_steps: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          image_url: string | null
+          step_number: number
+          tips: string[] | null
+          title: string
+          tutorial_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          image_url?: string | null
+          step_number: number
+          tips?: string[] | null
+          title: string
+          tutorial_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          image_url?: string | null
+          step_number?: number
+          tips?: string[] | null
+          title?: string
+          tutorial_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tutorial_steps_tutorial_id_fkey"
+            columns: ["tutorial_id"]
+            isOneToOne: false
+            referencedRelation: "tutorials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tutorials: {
+        Row: {
+          author_id: string
+          category: string
+          content: string
+          created_at: string | null
+          description: string | null
+          difficulty: string | null
+          estimated_time: number | null
+          featured_image: string | null
+          id: string
+          is_published: boolean | null
+          like_count: number | null
+          slug: string
+          step_count: number | null
+          tags: string[] | null
+          title: string
+          updated_at: string | null
+          video_url: string | null
+          view_count: number | null
+        }
+        Insert: {
+          author_id: string
+          category: string
+          content: string
+          created_at?: string | null
+          description?: string | null
+          difficulty?: string | null
+          estimated_time?: number | null
+          featured_image?: string | null
+          id?: string
+          is_published?: boolean | null
+          like_count?: number | null
+          slug: string
+          step_count?: number | null
+          tags?: string[] | null
+          title: string
+          updated_at?: string | null
+          video_url?: string | null
+          view_count?: number | null
+        }
+        Update: {
+          author_id?: string
+          category?: string
+          content?: string
+          created_at?: string | null
+          description?: string | null
+          difficulty?: string | null
+          estimated_time?: number | null
+          featured_image?: string | null
+          id?: string
+          is_published?: boolean | null
+          like_count?: number | null
+          slug?: string
+          step_count?: number | null
+          tags?: string[] | null
+          title?: string
+          updated_at?: string | null
+          video_url?: string | null
+          view_count?: number | null
         }
         Relationships: []
       }
