@@ -75,7 +75,7 @@ const handler = async (req: Request): Promise<Response> => {
       status: {
         online: false,
         players: { online: 0, max: 0 },
-        error: error.message,
+        error: (error as Error).message,
         health: "poor" as const
       },
       timestamp: new Date().toISOString()

@@ -51,22 +51,79 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Command is required");
     }
 
-    // Get RCON server configuration from database
+    // Get client IP and user agent for audit logging
+    const clientIP = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+    const userAgent = req.headers.get('user-agent') || 'unknown';
+
+    // Get RCON server configuration from database (without password)
     const { data: serverConfig, error: serverError } = await supabaseClient
       .from('rcon_servers')
-      .select('*')
+      .select('id, name, host, port, is_active')
       .eq('name', server)
       .eq('is_active', true)
       .single();
 
     if (serverError || !serverConfig) {
+      // Log failed access attempt
+      await supabaseClient.rpc('log_rcon_access', {
+        p_server_id: null,
+        p_access_type: 'server_lookup',
+        p_ip_address: clientIP,
+        p_user_agent: userAgent,
+        p_success: false,
+        p_error_message: `Server '${server}' not found or inactive`
+      });
       throw new Error(`RCON server '${server}' not found or inactive`);
     }
 
-    // Connect to Minecraft server via RCON
-    const result = await executeRconCommand(serverConfig.host, serverConfig.port, serverConfig.password, command);
+    // Get encryption key from environment
+    const encryptionKey = Deno.env.get("RCON_ENCRYPTION_KEY");
+    if (!encryptionKey) {
+      throw new Error("RCON encryption key not configured");
+    }
 
-    // Log the command execution to audit log
+    // Securely get the decrypted RCON password
+    const { data: passwordData, error: passwordError } = await supabaseClient
+      .rpc('get_rcon_password_for_operation', {
+        server_id: serverConfig.id,
+        encryption_key: encryptionKey
+      });
+
+    if (passwordError || !passwordData) {
+      // Log failed password access
+      await supabaseClient.rpc('log_rcon_access', {
+        p_server_id: serverConfig.id,
+        p_access_type: 'password_access',
+        p_ip_address: clientIP,
+        p_user_agent: userAgent,
+        p_success: false,
+        p_error_message: 'Failed to decrypt RCON password'
+      });
+      throw new Error("Failed to access RCON credentials");
+    }
+
+    // Log successful password access
+    await supabaseClient.rpc('log_rcon_access', {
+      p_server_id: serverConfig.id,
+      p_access_type: 'password_access',
+      p_ip_address: clientIP,
+      p_user_agent: userAgent,
+      p_success: true
+    });
+
+    // Connect to Minecraft server via RCON with the decrypted password
+    const result = await executeRconCommand(serverConfig.host, serverConfig.port, passwordData, command);
+
+    // Log successful command execution
+    await supabaseClient.rpc('log_rcon_access', {
+      p_server_id: serverConfig.id,
+      p_access_type: 'command_execution',
+      p_ip_address: clientIP,
+      p_user_agent: userAgent,
+      p_success: true
+    });
+
+    // Also log to the existing audit log for backward compatibility
     await supabaseClient
       .from('rcon_audit_log')
       .insert({
@@ -92,9 +149,33 @@ const handler = async (req: Request): Promise<Response> => {
 
   } catch (error) {
     console.error("RCON command error:", error);
+    
+    // Try to log the error if we have enough info
+    try {
+      const clientIP = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+      const userAgent = req.headers.get('user-agent') || 'unknown';
+      
+      // Get Supabase client for error logging
+      const supabaseClient = createClient(
+        Deno.env.get("SUPABASE_URL") ?? "",
+        Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+      );
+      
+      await supabaseClient.rpc('log_rcon_access', {
+        p_server_id: null,
+        p_access_type: 'command_execution',
+        p_ip_address: clientIP,
+        p_user_agent: userAgent,
+        p_success: false,
+        p_error_message: (error as Error).message
+      });
+    } catch (logError) {
+      console.error("Failed to log RCON error:", logError);
+    }
+    
     return new Response(JSON.stringify({ 
       success: false, 
-      error: error.message 
+      error: (error as Error).message 
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,

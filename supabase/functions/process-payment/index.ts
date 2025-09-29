@@ -29,7 +29,7 @@ const executeRconCommands = async (commands: string[], username?: string) => {
       });
       logStep("RCON command executed", { command: finalCommand });
     } catch (error) {
-      logStep("RCON command failed", { command, error: error.message });
+      logStep("RCON command failed", { command, error: (error as Error).message });
     }
   }
 };
