@@ -665,6 +665,50 @@ export type Database = {
         }
         Relationships: []
       }
+      rcon_access_log: {
+        Row: {
+          access_type: string
+          accessed_at: string | null
+          error_message: string | null
+          id: string
+          ip_address: string | null
+          server_id: string
+          success: boolean | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          access_type: string
+          accessed_at?: string | null
+          error_message?: string | null
+          id?: string
+          ip_address?: string | null
+          server_id: string
+          success?: boolean | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          access_type?: string
+          accessed_at?: string | null
+          error_message?: string | null
+          id?: string
+          ip_address?: string | null
+          server_id?: string
+          success?: boolean | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rcon_access_log_server_id_fkey"
+            columns: ["server_id"]
+            isOneToOne: false
+            referencedRelation: "rcon_servers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rcon_audit_log: {
         Row: {
           command: string
@@ -703,6 +747,7 @@ export type Database = {
           is_active: boolean | null
           name: string
           password: string
+          password_encrypted: boolean | null
           port: number
           updated_at: string
         }
@@ -713,6 +758,7 @@ export type Database = {
           is_active?: boolean | null
           name: string
           password: string
+          password_encrypted?: boolean | null
           port?: number
           updated_at?: string
         }
@@ -723,6 +769,7 @@ export type Database = {
           is_active?: boolean | null
           name?: string
           password?: string
+          password_encrypted?: boolean | null
           port?: number
           updated_at?: string
         }
@@ -1030,6 +1077,30 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      decrypt_rcon_password: {
+        Args: { encrypted_password: string; encryption_key: string }
+        Returns: string
+      }
+      encrypt_rcon_password: {
+        Args: { encryption_key: string; password_text: string }
+        Returns: string
+      }
+      get_rcon_password_for_operation: {
+        Args: { encryption_key: string; server_id: string }
+        Returns: string
+      }
+      get_rcon_servers_safe: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          created_at: string
+          host: string
+          id: string
+          is_active: boolean
+          name: string
+          port: number
+          updated_at: string
+        }[]
+      }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
@@ -1040,6 +1111,17 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      log_rcon_access: {
+        Args: {
+          p_access_type: string
+          p_error_message?: string
+          p_ip_address?: string
+          p_server_id: string
+          p_success?: boolean
+          p_user_agent?: string
+        }
+        Returns: undefined
       }
     }
     Enums: {
