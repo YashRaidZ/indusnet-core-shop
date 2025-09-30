@@ -11,6 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
+import { PlayerManagement } from "@/components/admin/PlayerManagement";
+import { ServerPerformance } from "@/components/admin/ServerPerformance";
+import { CommandScheduler } from "@/components/admin/CommandScheduler";
 import { 
   Users, 
   Package, 
@@ -26,7 +29,10 @@ import {
   EyeOff,
   DollarSign,
   TrendingUp,
-  Server
+  Server,
+  UserCog,
+  Activity,
+  Clock
 } from "lucide-react";
 
 interface User {
@@ -545,14 +551,47 @@ export const AdminDashboard = () => {
       </div>
 
       <Tabs defaultValue="users" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-1 h-auto p-1">
-          <TabsTrigger value="users" className="text-xs sm:text-sm px-2 py-2">Users</TabsTrigger>
-          <TabsTrigger value="products" className="text-xs sm:text-sm px-2 py-2">Products</TabsTrigger>
-          <TabsTrigger value="orders" className="text-xs sm:text-sm px-2 py-2">Orders</TabsTrigger>
-          <TabsTrigger value="payments" className="text-xs sm:text-sm px-2 py-2">Payments</TabsTrigger>
-          <TabsTrigger value="transactions" className="text-xs sm:text-sm px-2 py-2">Transactions</TabsTrigger>
-          <TabsTrigger value="rcon" className="text-xs sm:text-sm px-2 py-2">RCON</TabsTrigger>
-          <TabsTrigger value="settings" className="text-xs sm:text-sm px-2 py-2">Settings</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-5 md:grid-cols-10 gap-1 h-auto p-1">
+          <TabsTrigger value="users" className="text-xs sm:text-sm px-2 py-2">
+            <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+            Users
+          </TabsTrigger>
+          <TabsTrigger value="products" className="text-xs sm:text-sm px-2 py-2">
+            <Package className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+            Products
+          </TabsTrigger>
+          <TabsTrigger value="orders" className="text-xs sm:text-sm px-2 py-2">
+            <ShoppingCart className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+            Orders
+          </TabsTrigger>
+          <TabsTrigger value="payments" className="text-xs sm:text-sm px-2 py-2">
+            <CreditCard className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+            Payments
+          </TabsTrigger>
+          <TabsTrigger value="transactions" className="text-xs sm:text-sm px-2 py-2">
+            <Receipt className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+            Transactions
+          </TabsTrigger>
+          <TabsTrigger value="rcon" className="text-xs sm:text-sm px-2 py-2">
+            <Terminal className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+            RCON
+          </TabsTrigger>
+          <TabsTrigger value="players" className="text-xs sm:text-sm px-2 py-2">
+            <UserCog className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+            Players
+          </TabsTrigger>
+          <TabsTrigger value="performance" className="text-xs sm:text-sm px-2 py-2">
+            <Activity className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+            Performance
+          </TabsTrigger>
+          <TabsTrigger value="scheduler" className="text-xs sm:text-sm px-2 py-2">
+            <Clock className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+            Scheduler
+          </TabsTrigger>
+          <TabsTrigger value="settings" className="text-xs sm:text-sm px-2 py-2">
+            <Settings className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+            Settings
+          </TabsTrigger>
         </TabsList>
 
         {/* Users Tab */}
@@ -1086,6 +1125,21 @@ export const AdminDashboard = () => {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Player Management Tab */}
+        <TabsContent value="players">
+          <PlayerManagement selectedServer={selectedServer} />
+        </TabsContent>
+
+        {/* Server Performance Tab */}
+        <TabsContent value="performance">
+          <ServerPerformance selectedServer={selectedServer} />
+        </TabsContent>
+
+        {/* Command Scheduler Tab */}
+        <TabsContent value="scheduler">
+          <CommandScheduler selectedServer={selectedServer} servers={rconServers} />
         </TabsContent>
       </Tabs>
 
