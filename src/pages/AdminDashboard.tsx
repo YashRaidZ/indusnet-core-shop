@@ -14,6 +14,8 @@ import { useToast } from "@/hooks/use-toast";
 import { PlayerManagement } from "@/components/admin/PlayerManagement";
 import { ServerPerformance } from "@/components/admin/ServerPerformance";
 import { CommandScheduler } from "@/components/admin/CommandScheduler";
+import { IntegrationSettings } from "@/components/admin/IntegrationSettings";
+import { MarketingTools } from "@/components/admin/MarketingTools";
 import { 
   Users, 
   Package, 
@@ -32,7 +34,8 @@ import {
   Server,
   UserCog,
   Activity,
-  Clock
+  Clock,
+  Webhook
 } from "lucide-react";
 
 interface User {
@@ -551,7 +554,7 @@ export const AdminDashboard = () => {
       </div>
 
       <Tabs defaultValue="users" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-5 md:grid-cols-10 gap-1 h-auto p-1">
+        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-5 md:grid-cols-12 gap-1 h-auto p-1">
           <TabsTrigger value="users" className="text-xs sm:text-sm px-2 py-2">
             <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
             Users
@@ -591,6 +594,14 @@ export const AdminDashboard = () => {
           <TabsTrigger value="settings" className="text-xs sm:text-sm px-2 py-2">
             <Settings className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
             Settings
+          </TabsTrigger>
+          <TabsTrigger value="integrations" className="text-xs sm:text-sm px-2 py-2">
+            <Webhook className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+            Integrations
+          </TabsTrigger>
+          <TabsTrigger value="marketing" className="text-xs sm:text-sm px-2 py-2">
+            <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+            Marketing
           </TabsTrigger>
         </TabsList>
 
@@ -1140,6 +1151,16 @@ export const AdminDashboard = () => {
         {/* Command Scheduler Tab */}
         <TabsContent value="scheduler">
           <CommandScheduler selectedServer={selectedServer} servers={rconServers} />
+        </TabsContent>
+
+        {/* Integration Settings Tab */}
+        <TabsContent value="integrations">
+          <IntegrationSettings />
+        </TabsContent>
+
+        {/* Marketing Tools Tab */}
+        <TabsContent value="marketing">
+          <MarketingTools />
         </TabsContent>
       </Tabs>
 
