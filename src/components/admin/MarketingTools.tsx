@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,6 +14,92 @@ export const MarketingTools = () => {
   const { toast } = useToast();
   const [promoCode, setPromoCode] = useState('');
   const [discount, setDiscount] = useState('');
+  const [maxUses, setMaxUses] = useState('');
+  const [promoCodes, setPromoCodes] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    loadPromoCodes();
+  }, []);
+
+  const loadPromoCodes = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('promo_codes')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setPromoCodes(data || []);
+    } catch (error: any) {
+      console.error('Failed to load promo codes:', error);
+    }
+  };
+
+  const createPromoCode = async () => {
+    if (!promoCode || !discount) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { error } = await supabase.from('promo_codes').insert({
+        code: promoCode.toUpperCase(),
+        discount_type: 'percentage',
+        discount_value: parseFloat(discount),
+        max_uses: maxUses ? parseInt(maxUses) : null,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Promo code created successfully",
+      });
+
+      setPromoCode('');
+      setDiscount('');
+      setMaxUses('');
+      loadPromoCodes();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create promo code",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deactivatePromoCode = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('promo_codes')
+        .update({ is_active: false })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Promo code deactivated",
+      });
+
+      loadPromoCodes();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to deactivate promo code",
+        variant: "destructive",
+      });
+    }
+  };
 
   const generatePromoCode = () => {
     const code = 'PROMO' + Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -120,26 +206,46 @@ export const MarketingTools = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="max-uses">Maximum Uses</Label>
-                <Input id="max-uses" type="number" placeholder="100" />
+                <Input 
+                  id="max-uses" 
+                  type="number" 
+                  placeholder="100"
+                  value={maxUses}
+                  onChange={(e) => setMaxUses(e.target.value)}
+                />
               </div>
 
-              <Button>
+              <Button onClick={createPromoCode} disabled={loading}>
                 <Tag className="mr-2 h-4 w-4" />
-                Create Promo Code
+                {loading ? 'Creating...' : 'Create Promo Code'}
               </Button>
 
               <div className="border-t pt-4 mt-4">
                 <h4 className="font-medium mb-3">Active Promo Codes</h4>
                 <div className="space-y-2">
-                  {['WELCOME10', 'SUMMER20', 'VIP30'].map((code) => (
-                    <div key={code} className="flex items-center justify-between p-3 rounded-lg border">
-                      <div>
-                        <p className="font-medium">{code}</p>
-                        <p className="text-sm text-muted-foreground">Used 45 times</p>
-                      </div>
-                      <Button variant="outline" size="sm">Edit</Button>
-                    </div>
-                  ))}
+                  {promoCodes.filter(p => p.is_active).length === 0 ? (
+                    <p className="text-sm text-muted-foreground">No active promo codes</p>
+                  ) : (
+                    promoCodes
+                      .filter(p => p.is_active)
+                      .map((code) => (
+                        <div key={code.id} className="flex items-center justify-between p-3 rounded-lg border">
+                          <div>
+                            <p className="font-medium">{code.code}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {code.discount_value}% off - Used {code.current_uses}/{code.max_uses || '∞'} times
+                            </p>
+                          </div>
+                          <Button 
+                            variant="destructive" 
+                            size="sm"
+                            onClick={() => deactivatePromoCode(code.id)}
+                          >
+                            Deactivate
+                          </Button>
+                        </div>
+                      ))
+                  )}
                 </div>
               </div>
             </CardContent>

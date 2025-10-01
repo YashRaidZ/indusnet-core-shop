@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Webhook, Key, MessageSquare, Bell } from 'lucide-react';
+import { Webhook, Key, MessageSquare } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 export const IntegrationSettings = () => {
@@ -14,6 +14,59 @@ export const IntegrationSettings = () => {
   const [discordWebhook, setDiscordWebhook] = useState('');
   const [discordEnabled, setDiscordEnabled] = useState(false);
   const [testingWebhook, setTestingWebhook] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    loadSettings();
+  }, []);
+
+  const loadSettings = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('integration_settings')
+        .select('*')
+        .eq('setting_key', 'discord')
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (data) {
+        const settings = data.setting_value as any;
+        setDiscordWebhook(settings.webhook_url || '');
+        setDiscordEnabled(data.is_active);
+      }
+    } catch (error: any) {
+      console.error('Failed to load settings:', error);
+    }
+  };
+
+  const saveDiscordSettings = async () => {
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from('integration_settings')
+        .upsert({
+          setting_key: 'discord',
+          setting_value: { webhook_url: discordWebhook },
+          is_active: discordEnabled,
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Discord settings saved successfully",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to save Discord settings",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const testDiscordWebhook = async () => {
     if (!discordWebhook) {
@@ -122,17 +175,9 @@ export const IntegrationSettings = () => {
                 </p>
               </div>
 
-              <div className="space-y-2">
-                <Label>Notification Events</Label>
-                <div className="space-y-2">
-                  {['New Orders', 'Player Reports', 'Server Status', 'New Tickets'].map((event) => (
-                    <div key={event} className="flex items-center justify-between">
-                      <span className="text-sm">{event}</span>
-                      <Switch disabled={!discordEnabled} />
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <Button onClick={saveDiscordSettings} disabled={saving || !discordEnabled}>
+                {saving ? 'Saving...' : 'Save Discord Settings'}
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>
