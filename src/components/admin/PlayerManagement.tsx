@@ -119,7 +119,7 @@ export const PlayerManagement = ({ selectedServer }: PlayerManagementProps) => {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="moderate" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-1">
               <TabsTrigger value="moderate">Moderate</TabsTrigger>
               <TabsTrigger value="permissions">Permissions</TabsTrigger>
               <TabsTrigger value="whitelist">Whitelist</TabsTrigger>
@@ -148,7 +148,7 @@ export const PlayerManagement = ({ selectedServer }: PlayerManagementProps) => {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <Button 
                     onClick={kickPlayer} 
                     disabled={!playerName || loading}
@@ -167,12 +167,12 @@ export const PlayerManagement = ({ selectedServer }: PlayerManagementProps) => {
                     Ban Player
                   </Button>
                   
-                  <Button 
-                    onClick={pardonPlayer} 
-                    disabled={!playerName || loading}
-                    variant="outline"
-                    className="col-span-2"
-                  >
+                    <Button 
+                      onClick={pardonPlayer} 
+                      disabled={!playerName || loading}
+                      variant="outline"
+                      className="sm:col-span-2"
+                    >
                     <UserCheck className="mr-2 h-4 w-4" />
                     Pardon Player
                   </Button>
@@ -192,7 +192,7 @@ export const PlayerManagement = ({ selectedServer }: PlayerManagementProps) => {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <Button 
                     onClick={opPlayer} 
                     disabled={!playerName || loading}
@@ -226,7 +226,7 @@ export const PlayerManagement = ({ selectedServer }: PlayerManagementProps) => {
                   />
                 </div>
 
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                   <Button 
                     onClick={whitelistAdd} 
                     disabled={!playerName || loading}
@@ -271,9 +271,9 @@ export const PlayerManagement = ({ selectedServer }: PlayerManagementProps) => {
                   </h3>
                   <div className="space-y-2">
                     {onlinePlayers.map((player, index) => (
-                      <div key={index} className="flex items-center justify-between p-2 bg-muted rounded">
-                        <span>{player}</span>
-                        <div className="space-x-2">
+                      <div key={index} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-2 sm:p-3 bg-muted rounded gap-2">
+                        <span className="font-medium">{player}</span>
+                        <div className="flex gap-2 w-full sm:w-auto">
                           <Button
                             size="sm"
                             variant="outline"

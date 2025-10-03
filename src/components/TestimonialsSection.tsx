@@ -45,9 +45,9 @@ const TestimonialsSection = () => {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
           {testimonials.map((testimonial, index) => (
-            <Card key={index} className="p-6 hover:shadow-glow transition-all duration-300 hover:scale-105 bg-card border-border group relative">
+            <Card key={index} className="p-4 sm:p-6 hover:shadow-glow transition-all duration-300 hover:scale-105 bg-card border-border group relative">
               <Quote className="absolute top-4 right-4 h-8 w-8 text-primary/20" />
               
               <div className="space-y-4">

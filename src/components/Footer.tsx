@@ -4,8 +4,8 @@ import { Heart, Mail, MessageCircle } from "lucide-react";
 const Footer = () => {
   return (
     <footer className="bg-background border-t border-border">
-      <div className="container mx-auto px-4 py-16">
-        <div className="grid md:grid-cols-4 gap-8">
+      <div className="container mx-auto px-4 py-12 sm:py-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
           {/* Brand */}
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
@@ -73,7 +73,7 @@ const Footer = () => {
         </div>
 
         {/* Bottom Bar */}
-        <div className="border-t border-border mt-12 pt-8 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+        <div className="border-t border-border mt-8 sm:mt-12 pt-6 sm:pt-8 flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0 text-center sm:text-left">
           <p className="text-muted-foreground text-sm">
             © 2024 IndusNetwork. All rights reserved.
           </p>

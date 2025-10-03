@@ -144,7 +144,7 @@ export const ServerPerformance = ({ selectedServer }: ServerPerformanceProps) =>
               </div>
 
               {/* Performance Metrics */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <Card>
                   <CardContent className="p-4">
                     <div className="flex items-center space-x-2 mb-2">
@@ -233,7 +233,7 @@ export const ServerPerformance = ({ selectedServer }: ServerPerformanceProps) =>
                 <Card>
                   <CardContent className="p-4">
                     <h3 className="font-semibold mb-2">World Information</h3>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                       <div>
                         <p className="text-muted-foreground">World Name</p>
                         <p className="font-medium">{serverStatus.world.name}</p>
@@ -248,7 +248,7 @@ export const ServerPerformance = ({ selectedServer }: ServerPerformanceProps) =>
               )}
 
               {/* Quick Actions */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <Button
                   onClick={saveAll}
                   disabled={loading || !serverStatus.online}

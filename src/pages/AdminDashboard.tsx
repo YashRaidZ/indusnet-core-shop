@@ -503,107 +503,116 @@ export const AdminDashboard = () => {
       </div>
 
       {/* Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Total Users</p>
-                <p className="text-2xl font-bold">{users.length}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">Total Users</p>
+                <p className="text-xl sm:text-2xl font-bold">{users.length}</p>
               </div>
-              <Users className="w-8 h-8 text-primary" />
+              <Users className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
             </div>
           </CardContent>
         </Card>
         
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Products</p>
-                <p className="text-2xl font-bold">{products.length}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">Products</p>
+                <p className="text-xl sm:text-2xl font-bold">{products.length}</p>
               </div>
-              <Package className="w-8 h-8 text-primary" />
+              <Package className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
             </div>
           </CardContent>
         </Card>
         
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Orders</p>
-                <p className="text-2xl font-bold">{orders.length}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">Orders</p>
+                <p className="text-xl sm:text-2xl font-bold">{orders.length}</p>
               </div>
-              <ShoppingCart className="w-8 h-8 text-primary" />
+              <ShoppingCart className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
             </div>
           </CardContent>
         </Card>
         
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Revenue</p>
-                <p className="text-2xl font-bold">${totalRevenue.toFixed(2)}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">Revenue</p>
+                <p className="text-xl sm:text-2xl font-bold">${totalRevenue.toFixed(2)}</p>
               </div>
-              <DollarSign className="w-8 h-8 text-primary" />
+              <DollarSign className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <Tabs defaultValue="users" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-5 md:grid-cols-12 gap-1 h-auto p-1">
-          <TabsTrigger value="users" className="text-xs sm:text-sm px-2 py-2">
-            <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-            Users
-          </TabsTrigger>
-          <TabsTrigger value="products" className="text-xs sm:text-sm px-2 py-2">
-            <Package className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-            Products
-          </TabsTrigger>
-          <TabsTrigger value="orders" className="text-xs sm:text-sm px-2 py-2">
-            <ShoppingCart className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-            Orders
-          </TabsTrigger>
-          <TabsTrigger value="payments" className="text-xs sm:text-sm px-2 py-2">
-            <CreditCard className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-            Payments
-          </TabsTrigger>
-          <TabsTrigger value="transactions" className="text-xs sm:text-sm px-2 py-2">
-            <Receipt className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-            Transactions
-          </TabsTrigger>
-          <TabsTrigger value="rcon" className="text-xs sm:text-sm px-2 py-2">
-            <Terminal className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-            RCON
-          </TabsTrigger>
-          <TabsTrigger value="players" className="text-xs sm:text-sm px-2 py-2">
-            <UserCog className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-            Players
-          </TabsTrigger>
-          <TabsTrigger value="performance" className="text-xs sm:text-sm px-2 py-2">
-            <Activity className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-            Performance
-          </TabsTrigger>
-          <TabsTrigger value="scheduler" className="text-xs sm:text-sm px-2 py-2">
-            <Clock className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-            Scheduler
-          </TabsTrigger>
-          <TabsTrigger value="settings" className="text-xs sm:text-sm px-2 py-2">
-            <Settings className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-            Settings
-          </TabsTrigger>
-          <TabsTrigger value="integrations" className="text-xs sm:text-sm px-2 py-2">
-            <Webhook className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-            Integrations
-          </TabsTrigger>
-          <TabsTrigger value="marketing" className="text-xs sm:text-sm px-2 py-2">
-            <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-            Marketing
-          </TabsTrigger>
-        </TabsList>
+      <Tabs defaultValue="users" className="space-y-4 sm:space-y-6">
+        <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+          <TabsList className="inline-flex sm:grid w-full sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-12 gap-1 h-auto p-1 min-w-max sm:min-w-0">
+            <TabsTrigger value="users" className="text-xs sm:text-sm px-2 sm:px-3 py-2 whitespace-nowrap">
+              <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Users</span>
+              <span className="sm:hidden">Users</span>
+            </TabsTrigger>
+            <TabsTrigger value="products" className="text-xs sm:text-sm px-2 sm:px-3 py-2 whitespace-nowrap">
+              <Package className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+              Products
+            </TabsTrigger>
+            <TabsTrigger value="orders" className="text-xs sm:text-sm px-2 sm:px-3 py-2 whitespace-nowrap">
+              <ShoppingCart className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+              Orders
+            </TabsTrigger>
+            <TabsTrigger value="payments" className="text-xs sm:text-sm px-2 sm:px-3 py-2 whitespace-nowrap">
+              <CreditCard className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+              <span className="hidden md:inline">Payments</span>
+              <span className="md:hidden">Plans</span>
+            </TabsTrigger>
+            <TabsTrigger value="transactions" className="text-xs sm:text-sm px-2 sm:px-3 py-2 whitespace-nowrap">
+              <Receipt className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+              <span className="hidden md:inline">Transactions</span>
+              <span className="md:hidden">Trans</span>
+            </TabsTrigger>
+            <TabsTrigger value="rcon" className="text-xs sm:text-sm px-2 sm:px-3 py-2 whitespace-nowrap">
+              <Terminal className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+              RCON
+            </TabsTrigger>
+            <TabsTrigger value="players" className="text-xs sm:text-sm px-2 sm:px-3 py-2 whitespace-nowrap">
+              <UserCog className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+              Players
+            </TabsTrigger>
+            <TabsTrigger value="performance" className="text-xs sm:text-sm px-2 sm:px-3 py-2 whitespace-nowrap">
+              <Activity className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+              <span className="hidden lg:inline">Performance</span>
+              <span className="lg:hidden">Perf</span>
+            </TabsTrigger>
+            <TabsTrigger value="scheduler" className="text-xs sm:text-sm px-2 sm:px-3 py-2 whitespace-nowrap">
+              <Clock className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+              <span className="hidden lg:inline">Scheduler</span>
+              <span className="lg:hidden">Sched</span>
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="text-xs sm:text-sm px-2 sm:px-3 py-2 whitespace-nowrap">
+              <Settings className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+              Settings
+            </TabsTrigger>
+            <TabsTrigger value="integrations" className="text-xs sm:text-sm px-2 sm:px-3 py-2 whitespace-nowrap">
+              <Webhook className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+              <span className="hidden lg:inline">Integrations</span>
+              <span className="lg:hidden">Int</span>
+            </TabsTrigger>
+            <TabsTrigger value="marketing" className="text-xs sm:text-sm px-2 sm:px-3 py-2 whitespace-nowrap">
+              <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+              <span className="hidden lg:inline">Marketing</span>
+              <span className="lg:hidden">Mkt</span>
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* Users Tab */}
         <TabsContent value="users">
@@ -612,35 +621,35 @@ export const AdminDashboard = () => {
               <CardTitle>User Management</CardTitle>
               <CardDescription>Manage user roles and permissions</CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full">
+            <CardContent className="p-4 sm:p-6">
+              <div className="overflow-x-auto -mx-4 sm:mx-0">
+                <table className="w-full min-w-[600px]">
                   <thead>
                     <tr className="border-b">
-                      <th className="text-left p-2">Display Name</th>
-                      <th className="text-left p-2">Minecraft Username</th>
-                      <th className="text-left p-2">Role</th>
-                      <th className="text-left p-2">Joined</th>
-                      <th className="text-left p-2">Actions</th>
+                      <th className="text-left p-2 text-xs sm:text-sm">Display Name</th>
+                      <th className="text-left p-2 text-xs sm:text-sm hidden md:table-cell">Minecraft Username</th>
+                      <th className="text-left p-2 text-xs sm:text-sm">Role</th>
+                      <th className="text-left p-2 text-xs sm:text-sm hidden lg:table-cell">Joined</th>
+                      <th className="text-left p-2 text-xs sm:text-sm">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {users.map((user) => (
                       <tr key={user.id} className="border-b">
-                        <td className="p-2">{user.display_name || 'N/A'}</td>
-                        <td className="p-2">{user.minecraft_username || 'N/A'}</td>
+                        <td className="p-2 text-xs sm:text-sm">{user.display_name || 'N/A'}</td>
+                        <td className="p-2 text-xs sm:text-sm hidden md:table-cell">{user.minecraft_username || 'N/A'}</td>
                         <td className="p-2">
-                          <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
+                          <Badge variant={user.role === 'admin' ? 'default' : 'secondary'} className="text-xs">
                             {user.role || 'user'}
                           </Badge>
                         </td>
-                        <td className="p-2">{new Date(user.created_at).toLocaleDateString()}</td>
+                        <td className="p-2 text-xs sm:text-sm hidden lg:table-cell">{new Date(user.created_at).toLocaleDateString()}</td>
                         <td className="p-2">
                           <Select
                             value={user.role || 'user'}
                             onValueChange={(value) => updateUserRole(user.user_id, value)}
                           >
-                            <SelectTrigger className="w-24">
+                            <SelectTrigger className="w-20 sm:w-24 h-8 text-xs">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -662,13 +671,16 @@ export const AdminDashboard = () => {
         {/* Products Tab */}
         <TabsContent value="products">
           <Card>
-            <CardHeader>
-              <div className="flex justify-between items-center">
+            <CardHeader className="p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                  <CardTitle>Product Management</CardTitle>
-                  <CardDescription>Manage store products and pricing</CardDescription>
+                  <CardTitle className="text-lg sm:text-xl">Product Management</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">Manage store products and pricing</CardDescription>
                 </div>
-                <Button onClick={() => {
+                <Button 
+                  className="w-full sm:w-auto text-xs sm:text-sm"
+                  size="sm"
+                  onClick={() => {
                   setEditingProduct(null);
                   setProductForm({
                     name: '',
@@ -682,39 +694,40 @@ export const AdminDashboard = () => {
                   });
                   setShowProductDialog(true);
                 }}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Product
+                  <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                  <span className="text-xs sm:text-sm">Add Product</span>
                 </Button>
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full">
+            <CardContent className="p-4 sm:p-6">
+              <div className="overflow-x-auto -mx-4 sm:mx-0">
+                <table className="w-full min-w-[600px]">
                   <thead>
                     <tr className="border-b">
-                      <th className="text-left p-2">Name</th>
-                      <th className="text-left p-2">Price</th>
-                      <th className="text-left p-2">Category</th>
-                      <th className="text-left p-2">Status</th>
-                      <th className="text-left p-2">Actions</th>
+                      <th className="text-left p-2 text-xs sm:text-sm">Name</th>
+                      <th className="text-left p-2 text-xs sm:text-sm">Price</th>
+                      <th className="text-left p-2 text-xs sm:text-sm hidden md:table-cell">Category</th>
+                      <th className="text-left p-2 text-xs sm:text-sm">Status</th>
+                      <th className="text-left p-2 text-xs sm:text-sm">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {products.map((product) => (
                       <tr key={product.id} className="border-b">
-                        <td className="p-2 font-medium">{product.name}</td>
-                        <td className="p-2">${product.price}</td>
-                        <td className="p-2">{product.category}</td>
+                        <td className="p-2 font-medium text-xs sm:text-sm">{product.name}</td>
+                        <td className="p-2 text-xs sm:text-sm">${product.price}</td>
+                        <td className="p-2 text-xs sm:text-sm hidden md:table-cell">{product.category}</td>
                         <td className="p-2">
-                          <Badge variant={product.is_active ? "default" : "secondary"}>
+                          <Badge variant={product.is_active ? "default" : "secondary"} className="text-xs">
                             {product.is_active ? 'Active' : 'Inactive'}
                           </Badge>
                         </td>
                         <td className="p-2">
-                          <div className="flex gap-2">
+                          <div className="flex gap-1 sm:gap-2">
                             <Button
                               variant="outline"
                               size="sm"
+                              className="h-8 w-8 p-0"
                               onClick={() => {
                                 setEditingProduct(product);
                                 setProductForm({
@@ -730,21 +743,23 @@ export const AdminDashboard = () => {
                                 setShowProductDialog(true);
                               }}
                             >
-                              <Edit className="w-4 h-4" />
+                              <Edit className="w-3 h-3 sm:w-4 sm:h-4" />
                             </Button>
                             <Button
                               variant={product.is_active ? "secondary" : "default"}
                               size="sm"
+                              className="h-8 w-8 p-0"
                               onClick={() => toggleProductStatus(product.id, product.is_active)}
                             >
-                              {product.is_active ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                              {product.is_active ? <EyeOff className="w-3 h-3 sm:w-4 sm:h-4" /> : <Eye className="w-3 h-3 sm:w-4 sm:h-4" />}
                             </Button>
                             <Button
                               variant="destructive"
                               size="sm"
+                              className="h-8 w-8 p-0"
                               onClick={() => deleteProduct(product.id)}
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
                             </Button>
                           </div>
                         </td>
