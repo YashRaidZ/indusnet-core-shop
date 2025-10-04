@@ -7,6 +7,18 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { UserX, Ban, Shield, UserCheck, Search } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { z } from "zod";
+
+const playerNameSchema = z.string()
+  .trim()
+  .min(1, "Player name is required")
+  .max(16, "Player name too long")
+  .regex(/^[a-zA-Z0-9_]+$/, "Only letters, numbers and underscores allowed");
+
+const reasonSchema = z.string()
+  .trim()
+  .max(200, "Reason too long")
+  .regex(/^[a-zA-Z0-9\s.,!?-]*$/, "Invalid characters in reason");
 
 interface PlayerManagementProps {
   selectedServer: string;
@@ -50,6 +62,19 @@ export const PlayerManagement = ({ selectedServer }: PlayerManagementProps) => {
 
   const kickPlayer = () => {
     if (!playerName) return;
+    
+    try {
+      playerNameSchema.parse(playerName);
+      if (reason) reasonSchema.parse(reason);
+    } catch (error) {
+      toast({
+        title: "Validation Error",
+        description: error instanceof z.ZodError ? error.issues[0].message : "Invalid input",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     const cmd = reason 
       ? `kick ${playerName} ${reason}` 
       : `kick ${playerName}`;
@@ -60,6 +85,19 @@ export const PlayerManagement = ({ selectedServer }: PlayerManagementProps) => {
 
   const banPlayer = () => {
     if (!playerName) return;
+    
+    try {
+      playerNameSchema.parse(playerName);
+      if (reason) reasonSchema.parse(reason);
+    } catch (error) {
+      toast({
+        title: "Validation Error",
+        description: error instanceof z.ZodError ? error.issues[0].message : "Invalid input",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     const cmd = reason 
       ? `ban ${playerName} ${reason}` 
       : `ban ${playerName}`;
@@ -68,35 +106,29 @@ export const PlayerManagement = ({ selectedServer }: PlayerManagementProps) => {
     setReason('');
   };
 
-  const pardonPlayer = () => {
+  const validateAndExecute = (command: string) => {
     if (!playerName) return;
-    executeCommand(`pardon ${playerName}`);
+    
+    try {
+      playerNameSchema.parse(playerName);
+    } catch (error) {
+      toast({
+        title: "Validation Error",
+        description: error instanceof z.ZodError ? error.issues[0].message : "Invalid player name",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    executeCommand(command);
     setPlayerName('');
   };
 
-  const opPlayer = () => {
-    if (!playerName) return;
-    executeCommand(`op ${playerName}`);
-    setPlayerName('');
-  };
-
-  const deopPlayer = () => {
-    if (!playerName) return;
-    executeCommand(`deop ${playerName}`);
-    setPlayerName('');
-  };
-
-  const whitelistAdd = () => {
-    if (!playerName) return;
-    executeCommand(`whitelist add ${playerName}`);
-    setPlayerName('');
-  };
-
-  const whitelistRemove = () => {
-    if (!playerName) return;
-    executeCommand(`whitelist remove ${playerName}`);
-    setPlayerName('');
-  };
+  const pardonPlayer = () => validateAndExecute(`pardon ${playerName}`);
+  const opPlayer = () => validateAndExecute(`op ${playerName}`);
+  const deopPlayer = () => validateAndExecute(`deop ${playerName}`);
+  const whitelistAdd = () => validateAndExecute(`whitelist add ${playerName}`);
+  const whitelistRemove = () => validateAndExecute(`whitelist remove ${playerName}`);
 
   const getOnlinePlayers = async () => {
     const result = await executeCommand('list');

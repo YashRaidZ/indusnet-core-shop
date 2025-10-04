@@ -8,6 +8,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { Clock, Plus, Trash2, Play } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { z } from "zod";
+
+const commandNameSchema = z.string()
+  .trim()
+  .min(1, "Name is required")
+  .max(100, "Name too long")
+  .regex(/^[a-zA-Z0-9\s\-_]+$/, "Only letters, numbers, spaces, hyphens and underscores allowed");
+
+const commandSchema = z.string()
+  .trim()
+  .min(1, "Command is required")
+  .max(500, "Command too long")
+  .regex(/^[a-zA-Z0-9\s\-_@.:\/]+$/, "Invalid characters in command");
 
 interface ScheduledCommand {
   id: string;
@@ -78,6 +91,18 @@ export const CommandScheduler = ({ selectedServer, servers }: CommandSchedulerPr
       toast({
         title: "Error",
         description: "Please fill in all fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      commandNameSchema.parse(newCommand.name);
+      commandSchema.parse(newCommand.command);
+    } catch (error) {
+      toast({
+        title: "Validation Error",
+        description: error instanceof z.ZodError ? error.issues[0].message : "Invalid input",
         variant: "destructive",
       });
       return;

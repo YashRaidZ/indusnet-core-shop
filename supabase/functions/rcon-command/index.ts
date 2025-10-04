@@ -1,10 +1,40 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+// Command validation schema
+const commandSchema = z.object({
+  command: z.string()
+    .min(1, "Command cannot be empty")
+    .max(500, "Command too long")
+    .regex(/^[a-zA-Z0-9\s\-_@.:\/]+$/, "Invalid characters in command"),
+  server: z.string()
+    .min(1)
+    .max(50)
+    .regex(/^[a-zA-Z0-9\-_]+$/, "Invalid server name")
+    .optional()
+    .default('main')
+});
+
+// Whitelist of allowed command prefixes
+const ALLOWED_COMMANDS = [
+  'kick', 'ban', 'pardon', 'op', 'deop',
+  'whitelist', 'list', 'save-all', 'stop',
+  'time', 'weather', 'gamemode', 'tp',
+  'give', 'clear', 'say', 'tell', 'msg',
+  'xp', 'effect', 'enchant', 'setblock',
+  'fill', 'summon', 'kill', 'difficulty'
+];
+
+function validateCommand(command: string): boolean {
+  const firstWord = command.trim().split(/\s+/)[0].toLowerCase();
+  return ALLOWED_COMMANDS.some(allowed => firstWord === allowed);
+}
 
 interface RconCommand {
   command: string;
@@ -45,10 +75,19 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Admin access required");
     }
 
-    const { command, server = 'main' }: RconCommand = await req.json();
+    // Validate input
+    const body = await req.json();
+    const validationResult = commandSchema.safeParse(body);
+    
+    if (!validationResult.success) {
+      throw new Error("Invalid command format");
+    }
 
-    if (!command) {
-      throw new Error("Command is required");
+    const { command, server } = validationResult.data;
+
+    // Validate command against whitelist
+    if (!validateCommand(command)) {
+      throw new Error("Command not allowed");
     }
 
     // Get client IP and user agent for audit logging
@@ -173,9 +212,18 @@ const handler = async (req: Request): Promise<Response> => {
       console.error("Failed to log RCON error:", logError);
     }
     
+    // Sanitize error message for client
+    const errorMessage = (error as Error).message;
+    const sanitizedError = errorMessage.includes("not allowed") || 
+                          errorMessage.includes("Invalid") ||
+                          errorMessage.includes("required") ||
+                          errorMessage.includes("Admin access")
+      ? errorMessage
+      : "Command execution failed";
+    
     return new Response(JSON.stringify({ 
       success: false, 
-      error: (error as Error).message 
+      error: sanitizedError 
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
