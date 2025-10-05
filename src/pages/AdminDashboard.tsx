@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
+import { z } from 'zod';
 import { PlayerManagement } from "@/components/admin/PlayerManagement";
 import { ServerPerformance } from "@/components/admin/ServerPerformance";
 import { CommandScheduler } from "@/components/admin/CommandScheduler";
@@ -37,6 +38,66 @@ import {
   Clock,
   Webhook
 } from "lucide-react";
+
+// Validation schemas
+const VALID_RANKS = ['member', 'vip', 'vipplus', 'mvp', 'mvpplus', 'elite', 'legend'];
+
+const productSchema = z.object({
+  name: z.string()
+    .trim()
+    .min(3, 'Product name must be at least 3 characters')
+    .max(50, 'Product name must be less than 50 characters')
+    .regex(/^[a-zA-Z0-9\s_-]+$/, 'Product name can only contain letters, numbers, spaces, hyphens, and underscores'),
+  description: z.string()
+    .trim()
+    .max(500, 'Description must be less than 500 characters'),
+  price: z.number()
+    .min(0, 'Price cannot be negative')
+    .max(10000, 'Price must be less than $10,000'),
+  category: z.string().refine(
+    (val) => ['ranks', 'coins', 'currency', 'kits', 'cosmetics', 'perks'].includes(val),
+    { message: 'Invalid category. Must be one of: ranks, coins, currency, kits, cosmetics, perks' }
+  ),
+  tier: z.string()
+    .trim()
+    .regex(/^[a-z0-9_]*$/, 'Tier must be lowercase alphanumeric with underscores only')
+    .max(20, 'Tier name must be less than 20 characters')
+    .optional()
+    .or(z.literal('')),
+  features: z.array(
+    z.string()
+      .trim()
+      .max(100, 'Feature description must be less than 100 characters')
+  ).max(10, 'Maximum 10 features allowed'),
+  is_active: z.boolean(),
+  is_popular: z.boolean()
+});
+
+const paymentPlanSchema = z.object({
+  name: z.string()
+    .trim()
+    .min(3, 'Plan name must be at least 3 characters')
+    .max(50, 'Plan name must be less than 50 characters')
+    .regex(/^[a-zA-Z0-9\s_-]+$/, 'Plan name can only contain letters, numbers, spaces, hyphens, and underscores'),
+  description: z.string()
+    .trim()
+    .max(500, 'Description must be less than 500 characters'),
+  amount: z.number()
+    .min(0, 'Amount cannot be negative')
+    .max(10000, 'Amount must be less than $10,000'),
+  interval: z.enum(['month', 'year'] as const),
+  features: z.array(
+    z.string()
+      .trim()
+      .max(100, 'Feature description must be less than 100 characters')
+  ).max(10, 'Maximum 10 features allowed'),
+  rcon_commands: z.array(
+    z.string()
+      .trim()
+      .max(200, 'Command must be less than 200 characters')
+  ).max(5, 'Maximum 5 commands allowed'),
+  is_active: z.boolean()
+});
 
 interface User {
   id: string;
@@ -263,16 +324,44 @@ export const AdminDashboard = () => {
 
   const saveProduct = async () => {
     try {
+      const features = productForm.features.split(',').map(f => f.trim()).filter(f => f);
+      
       const productData = {
         name: productForm.name,
         description: productForm.description,
         price: parseFloat(productForm.price),
         category: productForm.category,
-        tier: productForm.tier,
-        features: productForm.features.split(',').map(f => f.trim()).filter(f => f),
+        tier: productForm.tier || '',
+        features,
         is_active: productForm.is_active,
         is_popular: productForm.is_popular
       };
+
+      // Validate the product data
+      const validationResult = productSchema.safeParse(productData);
+      
+      if (!validationResult.success) {
+        const firstError = validationResult.error.issues[0];
+        toast({
+          title: "Validation Error",
+          description: firstError.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Additional validation for tier based on category
+      if (productData.category === 'ranks' && productData.tier) {
+        const tierLower = productData.tier.toLowerCase();
+        if (!VALID_RANKS.includes(tierLower)) {
+          toast({
+            title: "Validation Error",
+            description: `Invalid rank tier. Must be one of: ${VALID_RANKS.join(', ')}`,
+            variant: "destructive",
+          });
+          return;
+        }
+      }
 
       if (editingProduct) {
         const { error } = await supabase
@@ -338,15 +427,31 @@ export const AdminDashboard = () => {
 
   const savePlan = async () => {
     try {
+      const features = planForm.features.split(',').map(f => f.trim()).filter(f => f);
+      const rcon_commands = planForm.rcon_commands.split(',').map(f => f.trim()).filter(f => f);
+      
       const planData = {
         name: planForm.name,
         description: planForm.description,
         amount: parseFloat(planForm.amount),
         interval: planForm.interval,
-        features: planForm.features.split(',').map(f => f.trim()).filter(f => f),
-        rcon_commands: planForm.rcon_commands.split(',').map(f => f.trim()).filter(f => f),
+        features,
+        rcon_commands,
         is_active: planForm.is_active
       };
+
+      // Validate the plan data
+      const validationResult = paymentPlanSchema.safeParse(planData);
+      
+      if (!validationResult.success) {
+        const firstError = validationResult.error.issues[0];
+        toast({
+          title: "Validation Error",
+          description: firstError.message,
+          variant: "destructive",
+        });
+        return;
+      }
 
       if (editingPlan) {
         const { error } = await supabase
@@ -1237,7 +1342,12 @@ export const AdminDashboard = () => {
                   id="name"
                   value={productForm.name}
                   onChange={(e) => setProductForm({...productForm, name: e.target.value})}
+                  placeholder="VIP Rank"
+                  maxLength={50}
                 />
+                <p className="text-xs text-muted-foreground mt-1">
+                  3-50 characters. Letters, numbers, spaces, hyphens, and underscores only.
+                </p>
               </div>
               <div>
                 <Label htmlFor="price">Price ($)</Label>
@@ -1261,19 +1371,25 @@ export const AdminDashboard = () => {
                   <SelectContent>
                     <SelectItem value="ranks">Ranks</SelectItem>
                     <SelectItem value="coins">Coins</SelectItem>
-                    <SelectItem value="items">Items</SelectItem>
+                    <SelectItem value="currency">Currency</SelectItem>
+                    <SelectItem value="kits">Kits</SelectItem>
+                    <SelectItem value="cosmetics">Cosmetics</SelectItem>
                     <SelectItem value="perks">Perks</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label htmlFor="tier">Tier</Label>
+                <Label htmlFor="tier">Tier (optional)</Label>
                 <Input
                   id="tier"
                   value={productForm.tier}
                   onChange={(e) => setProductForm({...productForm, tier: e.target.value})}
-                  placeholder="e.g., Basic, Premium, VIP"
+                  placeholder="vip, elite, legend"
+                  maxLength={20}
                 />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Lowercase letters, numbers, and underscores only. For ranks, use: {VALID_RANKS.join(', ')}
+                </p>
               </div>
             </div>
             <div className="space-y-4">
@@ -1284,7 +1400,12 @@ export const AdminDashboard = () => {
                   value={productForm.description}
                   onChange={(e) => setProductForm({...productForm, description: e.target.value})}
                   rows={3}
+                  maxLength={500}
+                  placeholder="Detailed description of this product..."
                 />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Maximum 500 characters
+                </p>
               </div>
               <div>
                 <Label htmlFor="features">Features (comma-separated)</Label>
@@ -1295,6 +1416,9 @@ export const AdminDashboard = () => {
                   placeholder="Feature 1, Feature 2, Feature 3"
                   rows={3}
                 />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Maximum 10 features, each up to 100 characters
+                </p>
               </div>
               <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-2">
