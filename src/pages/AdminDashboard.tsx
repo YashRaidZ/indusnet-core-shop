@@ -91,6 +91,16 @@ interface PaymentTransaction {
   created_at: string;
 }
 
+interface RconServer {
+  id: string;
+  name: string;
+  host: string;
+  port: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export const AdminDashboard = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -105,10 +115,11 @@ export const AdminDashboard = () => {
   const [rconCommand, setRconCommand] = useState('');
   const [rconOutput, setRconOutput] = useState('');
   const [rconLoading, setRconLoading] = useState(false);
-  const [rconServers, setRconServers] = useState<any[]>([]);
+  const [rconServers, setRconServers] = useState<RconServer[]>([]);
   const [selectedServer, setSelectedServer] = useState('main');
   const [showServerDialog, setShowServerDialog] = useState(false);
-  const [editingServer, setEditingServer] = useState<any>(null);
+  const [editingServer, setEditingServer] = useState<Partial<RconServer> & { password?: string }>(null);
+  const [newPassword, setNewPassword] = useState('');
   const [productForm, setProductForm] = useState({
     name: '',
     description: '',
@@ -161,10 +172,9 @@ export const AdminDashboard = () => {
         .select('*')
         .order('created_at', { ascending: false });
 
+      // Use secure function that excludes passwords
       const { data: rconServersData } = await supabase
-        .from('rcon_servers')
-        .select('*')
-        .order('name');
+        .rpc('get_rcon_servers_safe');
 
       setUsers(usersData || []);
       setProducts(productsData || []);
@@ -429,21 +439,51 @@ export const AdminDashboard = () => {
   const saveRconServer = async () => {
     try {
       if (editingServer?.id) {
+        // Update existing server - only update password if a new one is provided
+        const updateData: any = {
+          name: editingServer.name,
+          host: editingServer.host,
+          port: editingServer.port,
+          is_active: editingServer.is_active
+        };
+        
+        // Only include password if it's being changed
+        if (newPassword) {
+          updateData.password = newPassword;
+        }
+        
         const { error } = await supabase
           .from('rcon_servers')
-          .update(editingServer)
+          .update(updateData)
           .eq('id', editingServer.id);
         if (error) throw error;
       } else {
+        // Create new server - password is required
+        if (!newPassword) {
+          toast({
+            title: "Error",
+            description: "Password is required for new servers",
+            variant: "destructive",
+          });
+          return;
+        }
+        
         const { error } = await supabase
           .from('rcon_servers')
-          .insert(editingServer);
+          .insert({
+            name: editingServer.name,
+            host: editingServer.host,
+            port: editingServer.port,
+            password: newPassword,
+            is_active: editingServer.is_active
+          });
         if (error) throw error;
       }
       
       await fetchData();
       setShowServerDialog(false);
       setEditingServer(null);
+      setNewPassword('');
       toast({
         title: "Success",
         description: "RCON server saved successfully",
@@ -969,7 +1009,8 @@ export const AdminDashboard = () => {
                     <CardDescription>Manage your Minecraft server RCON connections</CardDescription>
                   </div>
                   <Button onClick={() => {
-                    setEditingServer({ name: '', host: 'localhost', port: 25575, password: '', is_active: true });
+                    setEditingServer({ name: '', host: 'localhost', port: 25575, is_active: true });
+                    setNewPassword('');
                     setShowServerDialog(true);
                   }}>
                     <Plus className="w-4 h-4 mr-2" />
@@ -1007,6 +1048,7 @@ export const AdminDashboard = () => {
                                 size="sm"
                                 onClick={() => {
                                   setEditingServer(server);
+                                  setNewPassword(''); // Clear password field when editing
                                   setShowServerDialog(true);
                                 }}
                               >
@@ -1417,14 +1459,22 @@ export const AdminDashboard = () => {
               />
             </div>
             <div>
-              <Label htmlFor="serverPassword">RCON Password</Label>
+              <Label htmlFor="serverPassword">
+                {editingServer?.id ? 'Change RCON Password (leave blank to keep current)' : 'RCON Password *'}
+              </Label>
               <Input
                 id="serverPassword"
                 type="password"
-                value={editingServer?.password || ''}
-                onChange={(e) => setEditingServer({...editingServer, password: e.target.value})}
-                placeholder="RCON password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder={editingServer?.id ? "Enter new password to change" : "Enter RCON password"}
+                required={!editingServer?.id}
               />
+              {editingServer?.id && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Password is encrypted and cannot be viewed. Only enter a new password if you want to change it.
+                </p>
+              )}
             </div>
             <div className="flex items-center space-x-2">
               <Switch
