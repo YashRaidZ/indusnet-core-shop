@@ -30,16 +30,16 @@ const Hero = () => {
 
           {/* Server Stats */}
           <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-4 sm:gap-6 lg:gap-8 py-6">
-            <div className="flex items-center justify-center space-x-2 bg-card/50 backdrop-blur-sm px-3 sm:px-4 py-2 rounded-lg border border-border min-w-0">
-              <Users className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0" />
+            <div className="flex items-center justify-center space-x-2 bg-card/50 backdrop-blur-sm px-3 sm:px-4 py-2 rounded-lg border border-border min-w-0 hover:scale-105 hover:bg-card/70 hover:shadow-glow transition-all duration-300 cursor-pointer group">
+              <Users className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0 group-hover:scale-110 transition-transform" />
               <span className="text-sm sm:text-base text-foreground font-semibold truncate">2,847 Players</span>
             </div>
-            <div className="flex items-center justify-center space-x-2 bg-card/50 backdrop-blur-sm px-3 sm:px-4 py-2 rounded-lg border border-border min-w-0">
-              <Server className="h-4 w-4 sm:h-5 sm:w-5 text-accent flex-shrink-0" />
+            <div className="flex items-center justify-center space-x-2 bg-card/50 backdrop-blur-sm px-3 sm:px-4 py-2 rounded-lg border border-border min-w-0 hover:scale-105 hover:bg-card/70 hover:shadow-gold transition-all duration-300 cursor-pointer group">
+              <Server className="h-4 w-4 sm:h-5 sm:w-5 text-accent flex-shrink-0 group-hover:scale-110 transition-transform" />
               <span className="text-sm sm:text-base text-foreground font-semibold truncate">99.9% Uptime</span>
             </div>
-            <div className="flex items-center justify-center space-x-2 bg-card/50 backdrop-blur-sm px-3 sm:px-4 py-2 rounded-lg border border-border min-w-0">
-              <Play className="h-4 w-4 sm:h-5 sm:w-5 text-diamond flex-shrink-0" />
+            <div className="flex items-center justify-center space-x-2 bg-card/50 backdrop-blur-sm px-3 sm:px-4 py-2 rounded-lg border border-border min-w-0 hover:scale-105 hover:bg-card/70 hover:shadow-diamond transition-all duration-300 cursor-pointer group">
+              <Play className="h-4 w-4 sm:h-5 sm:w-5 text-diamond flex-shrink-0 group-hover:scale-110 transition-transform" />
               <span className="text-sm sm:text-base text-foreground font-semibold truncate">play.indusnetwork.com</span>
             </div>
           </div>
@@ -56,9 +56,9 @@ const Hero = () => {
           </div>
 
           {/* Server IP */}
-          <div className="bg-card/30 backdrop-blur-sm border border-border rounded-lg p-4 sm:p-6 max-w-xs sm:max-w-md mx-auto">
+          <div className="bg-card/30 backdrop-blur-sm border border-border rounded-lg p-4 sm:p-6 max-w-xs sm:max-w-md mx-auto hover:bg-card/50 hover:scale-105 hover:shadow-glow transition-all duration-300 cursor-pointer group">
             <p className="text-xs sm:text-sm text-muted-foreground mb-2">Server IP</p>
-            <code className="text-sm sm:text-lg font-mono text-primary bg-muted/50 px-2 sm:px-3 py-1 rounded break-all">
+            <code className="text-sm sm:text-lg font-mono text-primary bg-muted/50 px-2 sm:px-3 py-1 rounded break-all group-hover:bg-muted/70 transition-colors">
               play.indusnetwork.com
             </code>
           </div>
