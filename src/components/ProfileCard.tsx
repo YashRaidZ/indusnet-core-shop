@@ -7,6 +7,21 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Edit, Save, X, User, Clock, Trophy, Coins } from 'lucide-react';
 import { useProfile } from '@/hooks/useProfile';
+import { z } from 'zod';
+import { toast } from 'sonner';
+
+const profileSchema = z.object({
+  display_name: z.string()
+    .trim()
+    .min(3, "Display name must be at least 3 characters")
+    .max(30, "Display name must be less than 30 characters")
+    .regex(/^[a-zA-Z0-9\s_-]+$/, "Display name can only contain letters, numbers, spaces, underscores, and hyphens"),
+  minecraft_username: z.string()
+    .trim()
+    .min(3, "Minecraft username must be at least 3 characters")
+    .max(16, "Minecraft username must be less than 16 characters")
+    .regex(/^[a-zA-Z0-9_]+$/, "Minecraft username can only contain letters, numbers, and underscores")
+});
 
 export const ProfileCard = () => {
   const { profile, loading, updateProfile } = useProfile();
@@ -51,6 +66,13 @@ export const ProfileCard = () => {
   };
 
   const handleSave = async () => {
+    const validationResult = profileSchema.safeParse(editData);
+    if (!validationResult.success) {
+      const firstError = validationResult.error.issues[0];
+      toast.error(`Validation Error: ${firstError.message}`);
+      return;
+    }
+    
     await updateProfile(editData);
     setIsEditing(false);
   };
@@ -84,7 +106,11 @@ export const ProfileCard = () => {
                 value={editData.display_name}
                 onChange={(e) => setEditData({ ...editData, display_name: e.target.value })}
                 placeholder="Your display name"
+                maxLength={30}
               />
+              <p className="text-xs text-muted-foreground">
+                3-30 characters, letters, numbers, spaces, underscores, and hyphens only
+              </p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="minecraft_username">Minecraft Username</Label>
@@ -93,7 +119,11 @@ export const ProfileCard = () => {
                 value={editData.minecraft_username}
                 onChange={(e) => setEditData({ ...editData, minecraft_username: e.target.value })}
                 placeholder="Your Minecraft username"
+                maxLength={16}
               />
+              <p className="text-xs text-muted-foreground">
+                3-16 characters, letters, numbers, and underscores only
+              </p>
             </div>
             <div className="flex gap-2">
               <Button onClick={handleSave} size="sm" className="flex-1">

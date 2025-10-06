@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { z } from 'zod';
 import { 
   Ticket, 
   Send, 
@@ -35,6 +36,20 @@ interface SupportTicket {
 }
 
 const Support = () => {
+  const ticketSchema = z.object({
+    title: z.string()
+      .trim()
+      .min(5, "Title must be at least 5 characters")
+      .max(100, "Title must be less than 100 characters")
+      .regex(/^[a-zA-Z0-9\s.,!?'"()\-_]+$/, "Title contains invalid characters"),
+    description: z.string()
+      .trim()
+      .min(20, "Description must be at least 20 characters")
+      .max(2000, "Description must be less than 2000 characters"),
+    category: z.enum(['account', 'gameplay', 'technical', 'billing', 'report', 'appeal', 'other']),
+    priority: z.enum(['low', 'medium', 'high', 'urgent'])
+  });
+
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
@@ -82,15 +97,23 @@ const Support = () => {
     e.preventDefault();
     if (!user) return;
 
+    // Validate input
+    const validationResult = ticketSchema.safeParse(newTicket);
+    if (!validationResult.success) {
+      const firstError = validationResult.error.issues[0];
+      toast.error(`Validation Error: ${firstError.message}`);
+      return;
+    }
+
     setSubmitting(true);
     try {
       const { error } = await (supabase as any)
         .from('support_tickets')
         .insert({
-          title: newTicket.title,
-          description: newTicket.description,
-          category: newTicket.category,
-          priority: newTicket.priority,
+          title: validationResult.data.title,
+          description: validationResult.data.description,
+          category: validationResult.data.category,
+          priority: validationResult.data.priority,
           status: 'open',
           user_id: user.id
         });
@@ -257,8 +280,12 @@ const Support = () => {
                       value={newTicket.title}
                       onChange={(e) => setNewTicket(prev => ({ ...prev, title: e.target.value }))}
                       placeholder="Brief description of your issue"
+                      maxLength={100}
                       required
                     />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      5-100 characters, letters, numbers, and common punctuation only
+                    </p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -310,9 +337,13 @@ const Support = () => {
                       value={newTicket.description}
                       onChange={(e) => setNewTicket(prev => ({ ...prev, description: e.target.value }))}
                       placeholder="Please provide detailed information about your issue..."
+                      maxLength={2000}
                       rows={6}
                       required
                     />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      20-2000 characters required
+                    </p>
                   </div>
 
                   <Button type="submit" disabled={submitting} className="w-full">

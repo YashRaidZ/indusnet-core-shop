@@ -853,6 +853,30 @@ export type Database = {
         }
         Relationships: []
       }
+      rcon_password_access_attempts: {
+        Row: {
+          attempted_at: string
+          id: string
+          server_id: string
+          success: boolean
+          user_id: string
+        }
+        Insert: {
+          attempted_at?: string
+          id?: string
+          server_id: string
+          success?: boolean
+          user_id: string
+        }
+        Update: {
+          attempted_at?: string
+          id?: string
+          server_id?: string
+          success?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
       rcon_servers: {
         Row: {
           created_at: string
@@ -1224,6 +1248,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_rcon_password_rate_limit: {
+        Args: { p_server_id: string; p_user_id: string }
+        Returns: boolean
+      }
       decrypt_rcon_password: {
         Args: { encrypted_password: string; encryption_key: string }
         Returns: string
