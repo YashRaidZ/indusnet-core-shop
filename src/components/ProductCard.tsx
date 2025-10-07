@@ -52,7 +52,8 @@ const ProductCard = ({
     }
   };
 
-  const config = tierConfig[tier];
+  // Fallback to basic if tier is not found
+  const config = tierConfig[tier] || tierConfig.basic;
   const Icon = config.icon;
 
   return (
