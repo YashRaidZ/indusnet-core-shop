@@ -17,6 +17,7 @@ import { ServerPerformance } from "@/components/admin/ServerPerformance";
 import { CommandScheduler } from "@/components/admin/CommandScheduler";
 import { IntegrationSettings } from "@/components/admin/IntegrationSettings";
 import { MarketingTools } from "@/components/admin/MarketingTools";
+import { PaymentGatewaySettings } from "@/components/admin/PaymentGatewaySettings";
 import { useNavigate } from "react-router-dom";
 import { 
   Users, 
@@ -1274,39 +1275,44 @@ export const AdminDashboard = () => {
 
         {/* Settings */}
         <TabsContent value="settings">
-          <Card>
-            <CardHeader>
-              <CardTitle>System Settings</CardTitle>
-              <CardDescription>Configure system-wide settings</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <Card>
-                  <CardContent className="p-4">
-                    <h4 className="font-semibold mb-2">Server Management</h4>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Manage Minecraft server settings and RCON
-                    </p>
-                    <Button variant="outline" className="w-full">
-                      Configure RCON
-                    </Button>
-                  </CardContent>
-                </Card>
-                
-                <Card>
-                  <CardContent className="p-4">
-                    <h4 className="font-semibold mb-2">Payment Settings</h4>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Configure payment gateways and pricing
-                    </p>
-                    <Button variant="outline" className="w-full">
-                      Payment Config
-                    </Button>
-                  </CardContent>
-                </Card>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="space-y-6">
+            <PaymentGatewaySettings />
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>System Settings</CardTitle>
+                <CardDescription>Configure system-wide settings</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Card>
+                    <CardContent className="p-4">
+                      <h4 className="font-semibold mb-2">Server Management</h4>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Manage Minecraft server settings and RCON
+                      </p>
+                      <Button variant="outline" className="w-full">
+                        Configure RCON
+                      </Button>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardContent className="p-4">
+                      <h4 className="font-semibold mb-2">Website Settings</h4>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Configure website name and details
+                      </p>
+                      <Button variant="outline" className="w-full" onClick={() => navigate('/admin/settings')}>
+                        <Settings className="h-4 w-4 mr-2" />
+                        Website Config
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         {/* Player Management Tab */}
