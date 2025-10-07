@@ -7,6 +7,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useCart } from "@/contexts/CartContext";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 const Navigation = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -14,16 +15,19 @@ const Navigation = () => {
   const { user, signOut } = useAuth();
   const { isAdmin } = useUserRole();
   const { getItemCount } = useCart();
+  const { getSetting } = useSiteSettings();
   const navigate = useNavigate();
+  
+  const websiteName = getSetting('website_name') || 'IndusNetwork';
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
 
   const navItems = [
-    { href: "#home", label: "Home" },
+    { href: "/", label: "Home", isLink: true },
     { href: "#features", label: "Features" },
-    { href: "#shop", label: "Shop" },
+    { href: "/shop", label: "Shop", isLink: true },
     { href: "/news", label: "News", isLink: true },
     { href: "/events", label: "Events", isLink: true },
     { href: "/tutorials", label: "Tutorials", isLink: true },
@@ -43,7 +47,7 @@ const Navigation = () => {
           <div className="w-8 h-8 bg-gradient-primary rounded-md flex items-center justify-center animate-pulse-glow">
             <span className="text-primary-foreground font-bold text-sm font-gaming">IN</span>
           </div>
-          <span className="text-xl font-bold text-foreground font-futuristic">IndusNetwork</span>
+          <span className="text-xl font-bold text-foreground font-futuristic">{websiteName}</span>
         </div>
 
         {/* Desktop Navigation */}

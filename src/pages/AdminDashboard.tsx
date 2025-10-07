@@ -17,6 +17,7 @@ import { ServerPerformance } from "@/components/admin/ServerPerformance";
 import { CommandScheduler } from "@/components/admin/CommandScheduler";
 import { IntegrationSettings } from "@/components/admin/IntegrationSettings";
 import { MarketingTools } from "@/components/admin/MarketingTools";
+import { useNavigate } from "react-router-dom";
 import { 
   Users, 
   Package, 
@@ -201,6 +202,7 @@ export const AdminDashboard = () => {
     is_active: true
   });
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const fetchData = async () => {
     setLoading(true);
@@ -696,6 +698,13 @@ export const AdminDashboard = () => {
             </div>
           </CardContent>
         </Card>
+      </div>
+
+      <div className="mb-6">
+        <Button onClick={() => navigate('/admin/settings')} variant="outline">
+          <Settings className="h-4 w-4 mr-2" />
+          Website Settings
+        </Button>
       </div>
 
       <Tabs defaultValue="users" className="space-y-4 sm:space-y-6">

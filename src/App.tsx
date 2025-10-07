@@ -16,6 +16,8 @@ import News from "./pages/News";
 import Events from "./pages/Events";
 import Tutorials from "./pages/Tutorials";
 import Gallery from "./pages/Gallery";
+import Shop from "./pages/Shop";
+import SiteSettings from "./pages/SiteSettings";
 import NotFound from "./pages/NotFound";
 import { AdminRoute } from "./components/AdminRoute";
 import { CartProvider } from "./contexts/CartContext";
@@ -44,9 +46,15 @@ const App = () => (
             <Route path="/gallery" element={<Gallery />} />
             <Route path="/rules" element={<ServerRules />} />
             <Route path="/support" element={<Support />} />
+            <Route path="/shop" element={<Shop />} />
             <Route path="/admin" element={
               <AdminRoute>
                 <AdminDashboard />
+              </AdminRoute>
+            } />
+            <Route path="/admin/settings" element={
+              <AdminRoute>
+                <SiteSettings />
               </AdminRoute>
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
