@@ -18,6 +18,7 @@ import { CommandScheduler } from "@/components/admin/CommandScheduler";
 import { IntegrationSettings } from "@/components/admin/IntegrationSettings";
 import { MarketingTools } from "@/components/admin/MarketingTools";
 import { PaymentGatewaySettings } from "@/components/admin/PaymentGatewaySettings";
+import { NewsManagement } from "@/components/admin/NewsManagement";
 import { useNavigate } from "react-router-dom";
 import { 
   Users, 
@@ -38,7 +39,8 @@ import {
   UserCog,
   Activity,
   Clock,
-  Webhook
+  Webhook,
+  Newspaper
 } from "lucide-react";
 
 // Validation schemas
@@ -766,6 +768,10 @@ export const AdminDashboard = () => {
               <span className="hidden lg:inline">Marketing</span>
               <span className="lg:hidden">Mkt</span>
             </TabsTrigger>
+            <TabsTrigger value="news" className="text-xs sm:text-sm px-2 sm:px-3 py-2 whitespace-nowrap">
+              <Newspaper className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+              News
+            </TabsTrigger>
           </TabsList>
         </div>
 
@@ -1338,6 +1344,11 @@ export const AdminDashboard = () => {
         {/* Marketing Tools Tab */}
         <TabsContent value="marketing">
           <MarketingTools />
+        </TabsContent>
+
+        {/* News Management Tab */}
+        <TabsContent value="news">
+          <NewsManagement />
         </TabsContent>
       </Tabs>
 
