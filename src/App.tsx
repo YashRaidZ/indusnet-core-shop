@@ -18,6 +18,8 @@ import Tutorials from "./pages/Tutorials";
 import Gallery from "./pages/Gallery";
 import Shop from "./pages/Shop";
 import SiteSettings from "./pages/SiteSettings";
+import TermsConditions from "./pages/TermsConditions";
+import RefundPolicy from "./pages/RefundPolicy";
 import NotFound from "./pages/NotFound";
 import { AdminRoute } from "./components/AdminRoute";
 import { CartProvider } from "./contexts/CartContext";
@@ -57,6 +59,8 @@ const App = () => (
                 <SiteSettings />
               </AdminRoute>
             } />
+            <Route path="/terms" element={<TermsConditions />} />
+            <Route path="/refund-policy" element={<RefundPolicy />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

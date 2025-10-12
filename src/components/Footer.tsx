@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Heart, Mail, MessageCircle } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Footer = () => {
   return (
@@ -42,10 +43,10 @@ const Footer = () => {
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-foreground">Support</h3>
             <ul className="space-y-2">
-              <li><a href="#" className="text-muted-foreground hover:text-primary transition-colors">Help Center</a></li>
+              <li><Link to="/support" className="text-muted-foreground hover:text-primary transition-colors">Help Center</Link></li>
               <li><a href="#" className="text-muted-foreground hover:text-primary transition-colors">Discord Support</a></li>
-              <li><a href="#" className="text-muted-foreground hover:text-primary transition-colors">Contact Us</a></li>
-              <li><a href="#" className="text-muted-foreground hover:text-primary transition-colors">Refund Policy</a></li>
+              <li><Link to="/support" className="text-muted-foreground hover:text-primary transition-colors">Contact Us</Link></li>
+              <li><Link to="/refund-policy" className="text-muted-foreground hover:text-primary transition-colors">Refund Policy</Link></li>
             </ul>
           </div>
 
@@ -74,9 +75,15 @@ const Footer = () => {
 
         {/* Bottom Bar */}
         <div className="border-t border-border mt-8 sm:mt-12 pt-6 sm:pt-8 flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0 text-center sm:text-left">
-          <p className="text-muted-foreground text-sm">
-            © 2024 IndusNetwork. All rights reserved.
-          </p>
+          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
+            <p className="text-muted-foreground text-sm">
+              © 2024 IndusNetwork. All rights reserved.
+            </p>
+            <div className="flex gap-3 text-sm">
+              <Link to="/terms" className="text-muted-foreground hover:text-primary transition-colors">Terms</Link>
+              <Link to="/refund-policy" className="text-muted-foreground hover:text-primary transition-colors">Refunds</Link>
+            </div>
+          </div>
           <div className="flex items-center space-x-1 text-muted-foreground text-sm">
             <span>Made with</span>
             <Heart className="h-4 w-4 text-red-500 fill-current" />
