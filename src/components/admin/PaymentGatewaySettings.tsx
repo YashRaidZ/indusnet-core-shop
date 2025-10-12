@@ -6,8 +6,9 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { usePaymentGateways, PaymentGateway } from '@/hooks/usePaymentGateways';
-import { CreditCard, Check, Settings2 } from 'lucide-react';
+import { CreditCard, Check, Settings2, AlertTriangle } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export const PaymentGatewaySettings = () => {
   const { gateways, isLoading, updateGateway } = usePaymentGateways();
@@ -65,6 +66,21 @@ export const PaymentGatewaySettings = () => {
 
   return (
     <>
+      <Alert variant="destructive" className="mb-4">
+        <AlertTriangle className="h-4 w-4" />
+        <AlertTitle>Security Warning: Do NOT Store API Secrets Here</AlertTitle>
+        <AlertDescription className="text-sm space-y-2 mt-2">
+          <p>
+            <strong>CRITICAL:</strong> This configuration interface is for testing purposes only. 
+            For production use, you MUST store all API keys and secrets in Supabase Secrets (environment variables).
+          </p>
+          <p className="text-xs opacity-90">
+            Storing secrets in the database exposes them to compromise. Always use edge functions 
+            to access payment gateway secrets server-side via environment variables.
+          </p>
+        </AlertDescription>
+      </Alert>
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -72,7 +88,7 @@ export const PaymentGatewaySettings = () => {
             Payment Gateway Configuration
           </CardTitle>
           <CardDescription>
-            Configure and manage payment gateways for your store. Enable the gateway you want to use.
+            Enable payment gateways. Configure API secrets in Supabase Secrets for production.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -144,19 +160,30 @@ export const PaymentGatewaySettings = () => {
           <DialogHeader>
             <DialogTitle>Configure {editingGateway?.name}</DialogTitle>
           </DialogHeader>
+
+          <Alert variant="destructive" className="my-4">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription className="text-xs">
+              <strong>WARNING:</strong> Storing secrets here is insecure. For production, use Supabase Secrets.
+              Store only non-sensitive config like currency or region preferences.
+            </AlertDescription>
+          </Alert>
           
           <div className="space-y-4 py-4">
             {editingGateway && getConfigFields(editingGateway.provider).map((field) => (
               <div key={field} className="space-y-2">
                 <Label htmlFor={field} className="text-sm font-medium">
                   {field.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
+                  {(field.includes('secret') || field.includes('key')) && (
+                    <span className="text-destructive ml-1">⚠️ Secret</span>
+                  )}
                 </Label>
                 <Input
                   id={field}
                   type={field.includes('secret') || field.includes('key') ? 'password' : 'text'}
                   value={configForm[field] || ''}
                   onChange={(e) => setConfigForm({ ...configForm, [field]: e.target.value })}
-                  placeholder={`Enter ${field}`}
+                  placeholder={field.includes('secret') || field.includes('key') ? 'Use Supabase Secrets instead' : `Enter ${field}`}
                   className="text-sm"
                 />
               </div>

@@ -1305,7 +1305,33 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      payment_gateways_public: {
+        Row: {
+          created_at: string | null
+          id: string | null
+          is_active: boolean | null
+          is_default: boolean | null
+          name: string | null
+          provider: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          is_default?: boolean | null
+          name?: string | null
+          provider?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          is_default?: boolean | null
+          name?: string | null
+          provider?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       check_rcon_password_rate_limit: {
