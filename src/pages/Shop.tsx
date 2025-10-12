@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { SEO } from '@/components/SEO';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
@@ -57,8 +58,14 @@ const Shop = () => {
   );
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
+    <>
+      <SEO 
+        title="Shop - Premium Ranks & Items"
+        description="Browse our premium Minecraft ranks, coin packages, and exclusive items. Enhance your gameplay with our carefully curated selection."
+        keywords="minecraft shop, minecraft ranks, buy minecraft ranks, minecraft coins, premium items"
+      />
+      <div className="min-h-screen bg-background">
+        <Navigation />
       <main className="pt-24 pb-20">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
@@ -147,8 +154,9 @@ const Shop = () => {
           </Tabs>
         </div>
       </main>
-      <Footer />
-    </div>
+        <Footer />
+      </div>
+    </>
   );
 };
 
