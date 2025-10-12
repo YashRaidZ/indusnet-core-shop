@@ -32,17 +32,20 @@ const Shop = () => {
   }
 
   const renderProducts = (productsList: typeof products) => (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
       {productsList.length > 0 ? (
         productsList.map((product) => (
           <ProductCard
             key={product.id}
+            id={product.id}
             title={product.name}
             price={`$${Number(product.price).toFixed(2)}`}
             description={product.description || ''}
             tier={(product.tier || 'basic') as 'basic' | 'premium' | 'elite'}
             features={product.features || []}
             popular={product.is_popular}
+            image={product.image_url}
+            category={product.category}
           />
         ))
       ) : (
@@ -68,15 +71,17 @@ const Shop = () => {
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 lg:grid-cols-7 mb-8">
-              <TabsTrigger value="all">All</TabsTrigger>
-              <TabsTrigger value="ranks">Ranks</TabsTrigger>
-              <TabsTrigger value="coins">Coins</TabsTrigger>
-              <TabsTrigger value="kits">Kits</TabsTrigger>
-              <TabsTrigger value="cosmetics">Cosmetics</TabsTrigger>
-              <TabsTrigger value="perks">Perks</TabsTrigger>
-              <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
-            </TabsList>
+            <div className="mb-8 -mx-4 px-4 overflow-x-auto">
+              <TabsList className="inline-flex w-auto min-w-full lg:grid lg:grid-cols-7 gap-2">
+                <TabsTrigger value="all" className="min-w-[80px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">All</TabsTrigger>
+                <TabsTrigger value="ranks" className="min-w-[80px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Ranks</TabsTrigger>
+                <TabsTrigger value="coins" className="min-w-[80px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Coins</TabsTrigger>
+                <TabsTrigger value="kits" className="min-w-[80px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Kits</TabsTrigger>
+                <TabsTrigger value="cosmetics" className="min-w-[100px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Cosmetics</TabsTrigger>
+                <TabsTrigger value="perks" className="min-w-[80px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Perks</TabsTrigger>
+                <TabsTrigger value="subscriptions" className="min-w-[120px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Subscriptions</TabsTrigger>
+              </TabsList>
+            </div>
 
             <TabsContent value="all" className="mt-8">
               {renderProducts(allProducts)}

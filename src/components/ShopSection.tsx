@@ -3,11 +3,13 @@ import ProductCard from "./ProductCard";
 const ShopSection = () => {
   const ranks = [
     {
+      id: "vip-rank",
       title: "VIP Rank",
       price: "$9.99",
       originalPrice: "$14.99",
       description: "Essential perks for dedicated players",
       tier: "basic" as const,
+      category: "ranks",
       features: [
         "VIP Chat prefix & color",
         "Access to VIP-only areas",
@@ -17,11 +19,13 @@ const ShopSection = () => {
       ]
     },
     {
+      id: "mvp-rank",
       title: "MVP Rank",
       price: "$19.99",
       originalPrice: "$29.99",
       description: "Advanced features for serious gamers",
       tier: "premium" as const,
+      category: "ranks",
       popular: true,
       features: [
         "All VIP benefits included",
@@ -33,11 +37,13 @@ const ShopSection = () => {
       ]
     },
     {
+      id: "elite-rank",
       title: "Elite Rank",
       price: "$39.99",
       originalPrice: "$59.99",
       description: "Ultimate experience with all features",
       tier: "elite" as const,
+      category: "ranks",
       features: [
         "All MVP benefits included",
         "Exclusive Elite island",
@@ -52,10 +58,12 @@ const ShopSection = () => {
 
   const coinPacks = [
     {
+      id: "starter-pack",
       title: "Starter Pack",
       price: "$4.99",
       description: "Perfect for new players",
       tier: "basic" as const,
+      category: "coins",
       features: [
         "1,000 IndusCoins",
         "Starter kit included",
@@ -64,10 +72,12 @@ const ShopSection = () => {
       ]
     },
     {
+      id: "gamer-pack",
       title: "Gamer Pack",
       price: "$14.99",
       description: "Great value for active players",
       tier: "premium" as const,
+      category: "coins",
       popular: true,
       features: [
         "3,500 IndusCoins",
@@ -78,10 +88,12 @@ const ShopSection = () => {
       ]
     },
     {
+      id: "master-pack",
       title: "Master Pack",
       price: "$29.99",
       description: "Maximum value bundle",
       tier: "elite" as const,
+      category: "coins",
       features: [
         "8,000 IndusCoins",
         "50% bonus coins",

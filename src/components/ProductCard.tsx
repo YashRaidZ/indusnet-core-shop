@@ -1,10 +1,12 @@
+import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Crown, Star, Sparkles, ShoppingCart } from "lucide-react";
+import { Crown, Star, Sparkles, ShoppingCart, Check } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 
 interface ProductCardProps {
+  id: string;
   title: string;
   price: string;
   originalPrice?: string;
@@ -13,26 +15,37 @@ interface ProductCardProps {
   tier: "basic" | "premium" | "elite";
   popular?: boolean;
   image?: string;
+  category: string;
 }
 
 const ProductCard = ({ 
+  id,
   title, 
   price, 
   originalPrice, 
   description, 
   features, 
   tier, 
-  popular = false 
+  popular = false,
+  image,
+  category
 }: ProductCardProps) => {
   const { addToCart } = useCart();
+  const [isAdding, setIsAdding] = React.useState(false);
 
-  const handleAddToCart = () => {
-    addToCart({
-      id: `${title.toLowerCase().replace(/\s+/g, '-')}`,
-      name: title,
-      price: parseFloat(price.replace('$', '')),
-      category: tier
-    });
+  const handleAddToCart = async () => {
+    setIsAdding(true);
+    try {
+      await addToCart({
+        id,
+        name: title,
+        price: parseFloat(price.replace('$', '')),
+        category,
+        image
+      });
+    } finally {
+      setTimeout(() => setIsAdding(false), 500);
+    }
   };
   const tierConfig = {
     basic: {
@@ -99,11 +112,21 @@ const ProductCard = ({
         <Button 
           variant={config.variant} 
           size="lg" 
-          className="w-full group/btn mt-auto h-12 sm:h-14 text-base sm:text-lg font-bold"
+          className="w-full group/btn mt-auto h-12 sm:h-14 text-base sm:text-lg font-bold touch-manipulation active:scale-95 transition-transform"
           onClick={handleAddToCart}
+          disabled={isAdding}
         >
-          <ShoppingCart className="h-5 w-5 sm:h-6 sm:w-6 mr-2 group-hover/btn:scale-110 transition-transform flex-shrink-0" />
-          <span className="truncate">Add to Cart</span>
+          {isAdding ? (
+            <>
+              <Check className="h-5 w-5 sm:h-6 sm:w-6 mr-2 flex-shrink-0" />
+              <span className="truncate">Added!</span>
+            </>
+          ) : (
+            <>
+              <ShoppingCart className="h-5 w-5 sm:h-6 sm:w-6 mr-2 group-hover/btn:scale-110 transition-transform flex-shrink-0" />
+              <span className="truncate">Add to Cart</span>
+            </>
+          )}
         </Button>
       </div>
     </Card>
