@@ -4,7 +4,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, stripe-signature",
 };
 
 const logStep = (step: string, details?: any) => {
@@ -46,19 +46,58 @@ serve(async (req) => {
   );
 
   try {
-    logStep("Function started");
-
-    const { sessionId } = await req.json();
-    if (!sessionId) throw new Error("Session ID is required");
+    logStep("Function started - verifying webhook");
 
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
+    
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
+    if (!webhookSecret) {
+      logStep("ERROR: STRIPE_WEBHOOK_SECRET not configured");
+      throw new Error("Webhook secret not configured");
+    }
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
     
-    // Retrieve session details
-    const session = await stripe.checkout.sessions.retrieve(sessionId);
-    logStep("Session retrieved", { sessionId, status: session.payment_status });
+    // Verify webhook signature for security
+    const signature = req.headers.get("stripe-signature");
+    if (!signature) {
+      logStep("ERROR: Missing Stripe signature");
+      return new Response(JSON.stringify({ error: "Missing signature" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 401,
+      });
+    }
+
+    const body = await req.text();
+    let event: Stripe.Event;
+
+    try {
+      event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+      logStep("Webhook signature verified", { eventType: event.type });
+    } catch (err) {
+      logStep("ERROR: Webhook signature verification failed", { error: (err as Error).message });
+      return new Response(JSON.stringify({ error: "Invalid signature" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400,
+      });
+    }
+
+    // Only process checkout.session.completed events
+    if (event.type !== "checkout.session.completed") {
+      logStep("Ignoring event type", { eventType: event.type });
+      return new Response(JSON.stringify({ 
+        success: true, 
+        message: "Event type not handled" 
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
+    const session = event.data.object as Stripe.Checkout.Session;
+    const sessionId = session.id;
+    logStep("Processing verified session", { sessionId, status: session.payment_status });
 
     if (session.payment_status !== 'paid') {
       return new Response(JSON.stringify({ error: "Payment not completed" }), {
@@ -77,7 +116,7 @@ serve(async (req) => {
         email: (customer as any).email,
         stripe_customer_id: session.customer,
         subscribed: true,
-        subscription_tier: 'Premium', // You can determine this from the plan
+        subscription_tier: 'Premium',
         subscription_end: new Date(subscription.current_period_end * 1000).toISOString(),
         updated_at: new Date().toISOString(),
       }, { onConflict: 'email' });
@@ -127,14 +166,12 @@ serve(async (req) => {
             // Handle different product categories with specific RCON commands
             switch (product.category?.toLowerCase()) {
               case 'ranks':
-                // Use tier if available, otherwise use product name
                 const groupName = product.tier || product.name.toLowerCase().replace(/\s+/g, '');
                 commands = [`lp user {username} parent set ${groupName}`];
                 break;
                 
               case 'coins':
               case 'currency':
-                // Extract amount from product name or use price as fallback
                 const coinAmount = product.name.match(/(\d+)/) ? product.name.match(/(\d+)/)[1] : Math.floor(product.price || 0);
                 commands = [`eco give {username} ${coinAmount}`];
                 break;
@@ -152,7 +189,6 @@ serve(async (req) => {
                 break;
                 
               default:
-                // Check if product has custom RCON commands
                 if (product.features && product.features.includes('auto_fulfillment')) {
                   commands = [`give {username} ${product.name.toLowerCase().replace(/\s+/g, '_')}`];
                 }
@@ -209,7 +245,7 @@ serve(async (req) => {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in process-payment", { message: errorMessage });
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    return new Response(JSON.stringify({ error: "Payment processing failed" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });
