@@ -1,7 +1,7 @@
 # Welcome to your My project
 
 ## Project WEBSITE URL
-**URL**: https://indusnetwork.netlify.app/
+**URL**: https://store.indus.qzz.io
 
 ## How can I edit this code?
 
