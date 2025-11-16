@@ -12,6 +12,52 @@ const logStep = (step: string, details?: any) => {
   console.log(`[PROCESS-PAYMENT] ${step}${detailsStr}`);
 };
 
+// Strict input sanitization for RCON commands
+const SAFE_IDENTIFIER_REGEX = /^[a-zA-Z0-9_-]+$/;
+
+const sanitizeForRcon = (input: string, maxLength: number = 32): string => {
+  if (!input || typeof input !== 'string') {
+    throw new Error('Invalid input: value must be a non-empty string');
+  }
+  
+  // Remove all whitespace
+  const cleaned = input.replace(/\s+/g, '');
+  
+  // Only allow alphanumeric, underscore, hyphen
+  if (!SAFE_IDENTIFIER_REGEX.test(cleaned)) {
+    throw new Error(`Invalid characters in value: ${input}. Only alphanumeric, underscore, and hyphen allowed.`);
+  }
+  
+  // Enforce length limit
+  if (cleaned.length === 0) {
+    throw new Error('Value cannot be empty after sanitization');
+  }
+  if (cleaned.length > maxLength) {
+    throw new Error(`Value too long: ${input} (max: ${maxLength} characters)`);
+  }
+  
+  return cleaned.toLowerCase();
+};
+
+const sanitizeNumber = (input: string, min: number = 1, max: number = 1000000): number => {
+  if (!input) {
+    throw new Error('Invalid input: value is required');
+  }
+  
+  const match = String(input).match(/(\d+)/);
+  const num = match ? parseInt(match[1]) : NaN;
+  
+  if (isNaN(num)) {
+    throw new Error(`Invalid number in value: ${input}`);
+  }
+  
+  if (num < min || num > max) {
+    throw new Error(`Number out of range: ${num} (must be between ${min} and ${max})`);
+  }
+  
+  return num;
+};
+
 // Execute RCON commands for fulfillment
 const executeRconCommands = async (commands: string[], username?: string) => {
   if (!commands || commands.length === 0) return;
@@ -163,35 +209,65 @@ serve(async (req) => {
           if (minecraftUsername) {
             let commands: string[] = [];
             
-            // Handle different product categories with specific RCON commands
-            switch (product.category?.toLowerCase()) {
-              case 'ranks':
-                const groupName = product.tier || product.name.toLowerCase().replace(/\s+/g, '');
-                commands = [`lp user {username} parent set ${groupName}`];
-                break;
+            try {
+              // Handle different product categories with strict input validation
+              switch (product.category?.toLowerCase()) {
+                case 'ranks':
+                  // Validate and sanitize rank name (max 20 chars for rank groups)
+                  const groupName = sanitizeForRcon(product.tier || product.name, 20);
+                  commands = [`lp user {username} parent set ${groupName}`];
+                  break;
+                  
+                case 'coins':
+                case 'currency':
+                  // Validate coin amount is a safe number
+                  const coinAmount = sanitizeNumber(product.name, 1, 1000000);
+                  commands = [`eco give {username} ${coinAmount}`];
+                  break;
+                  
+                case 'kits':
+                  // Validate kit name (max 20 chars)
+                  const kitName = sanitizeForRcon(product.name, 20);
+                  commands = [`kit ${kitName} {username}`];
+                  break;
+                  
+                case 'cosmetics':
+                  // Validate cosmetic name (max 30 chars)
+                  const cosmeticName = sanitizeForRcon(product.name, 30);
+                  commands = [`give {username} ${cosmeticName}`];
+                  break;
+                  
+                case 'perks':
+                  // Validate permission node (max 50 chars for permission strings)
+                  const permNode = sanitizeForRcon(product.name, 50);
+                  commands = [`perm add {username} ${permNode}`];
+                  break;
+                  
+                default:
+                  if (product.features && product.features.includes('auto_fulfillment')) {
+                    const itemName = sanitizeForRcon(product.name, 30);
+                    commands = [`give {username} ${itemName}`];
+                  }
+              }
+            } catch (sanitizationError) {
+              // Log validation failure and skip command execution
+              logStep("ERROR: Product data validation failed", { 
+                productName: product.name,
+                category: product.category,
+                error: (sanitizationError as Error).message 
+              });
+              
+              // Mark order as requiring manual review
+              await supabaseClient
+                .from('orders')
+                .update({ 
+                  fulfillment_status: 'failed',
+                  rcon_commands_executed: false 
+                })
+                .eq('id', orderId);
                 
-              case 'coins':
-              case 'currency':
-                const coinAmount = product.name.match(/(\d+)/) ? product.name.match(/(\d+)/)[1] : Math.floor(product.price || 0);
-                commands = [`eco give {username} ${coinAmount}`];
-                break;
-                
-              case 'kits':
-                commands = [`kit ${product.name.toLowerCase().replace(/\s+/g, '')} {username}`];
-                break;
-                
-              case 'cosmetics':
-                commands = [`give {username} ${product.name.toLowerCase().replace(/\s+/g, '_')}`];
-                break;
-                
-              case 'perks':
-                commands = [`perm add {username} ${product.name.toLowerCase().replace(/\s+/g, '.')}`];
-                break;
-                
-              default:
-                if (product.features && product.features.includes('auto_fulfillment')) {
-                  commands = [`give {username} ${product.name.toLowerCase().replace(/\s+/g, '_')}`];
-                }
+              logStep("Order marked for manual review due to validation failure", { orderId });
+              commands = []; // Clear commands to prevent execution
             }
 
             if (commands.length > 0) {
