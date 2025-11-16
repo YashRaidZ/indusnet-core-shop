@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,6 +12,22 @@ const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
   console.log(`[CREATE-CHECKOUT] ${step}${detailsStr}`);
 };
+
+// Input validation schemas
+const itemSchema = z.object({
+  name: z.string().min(1).max(100),
+  price: z.number().positive().max(100000),
+  quantity: z.number().int().positive().min(1).max(100),
+  category: z.string().min(1).max(50)
+});
+
+const checkoutRequestSchema = z.object({
+  type: z.enum(['one_time', 'subscription']),
+  items: z.array(itemSchema).min(1).max(50).optional(),
+  orderId: z.string().uuid().optional(),
+  productId: z.string().uuid().optional(),
+  planId: z.string().uuid().optional()
+});
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -29,18 +46,39 @@ serve(async (req) => {
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
 
-    const { productId, planId, type = "one_time" } = await req.json();
-    logStep("Request parsed", { productId, planId, type });
-
-    // Get user if authenticated (optional for one-time payments)
-    let user = null;
+    // SECURITY: Require authentication for all checkouts
     const authHeader = req.headers.get("Authorization");
-    if (authHeader) {
-      const token = authHeader.replace("Bearer ", "");
-      const { data: userData } = await supabaseClient.auth.getUser(token);
-      user = userData.user;
-      logStep("User authenticated", { userId: user?.id, email: user?.email });
+    if (!authHeader) {
+      logStep("ERROR: No authentication header");
+      throw new Error("Authentication required for checkout");
     }
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
+    
+    if (authError || !user) {
+      logStep("ERROR: Invalid authentication", { error: authError?.message });
+      throw new Error("Invalid authentication token");
+    }
+
+    logStep("User authenticated", { userId: user.id, email: user.email });
+
+    // Verify user has required profile data
+    const { data: profile } = await supabaseClient
+      .from('profiles')
+      .select('minecraft_username')
+      .eq('user_id', user.id)
+      .single();
+
+    if (!profile?.minecraft_username) {
+      logStep("ERROR: Missing minecraft username");
+      throw new Error("Complete your profile with a Minecraft username before purchasing");
+    }
+
+    // SECURITY: Validate input with zod schema
+    const requestBody = await req.json();
+    const validatedRequest = checkoutRequestSchema.parse(requestBody);
+    logStep("Request validated", { type: validatedRequest.type });
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
     const origin = req.headers.get("origin") || "http://localhost:3000";
@@ -51,26 +89,26 @@ serve(async (req) => {
     };
 
     // Handle customer creation
-    if (user?.email) {
-      const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-      if (customers.data.length > 0) {
-        sessionData.customer = customers.data[0].id;
-      } else {
-        sessionData.customer_email = user.email;
-      }
+    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+    if (customers.data.length > 0) {
+      sessionData.customer = customers.data[0].id;
     } else {
-      sessionData.customer_email = "guest@example.com";
+      sessionData.customer_email = user.email;
     }
 
-    if (type === "subscription" && planId) {
+    if (validatedRequest.type === "subscription" && validatedRequest.planId) {
       // Subscription checkout
-      const { data: plan } = await supabaseClient
+      const { data: plan, error: planError } = await supabaseClient
         .from('payment_plans')
         .select('*')
-        .eq('id', planId)
+        .eq('id', validatedRequest.planId)
+        .eq('is_active', true)
         .single();
 
-      if (!plan) throw new Error("Payment plan not found");
+      if (planError || !plan) {
+        logStep("ERROR: Plan not found or inactive");
+        throw new Error("Payment plan not found or no longer available");
+      }
 
       sessionData = {
         ...sessionData,
@@ -90,15 +128,130 @@ serve(async (req) => {
           },
         ],
       };
-    } else if (productId) {
-      // One-time product purchase
-      const { data: product } = await supabaseClient
+    } else if (validatedRequest.items && validatedRequest.items.length > 0) {
+      // SECURITY: Validate all items against database and fetch real prices
+      const lineItems = [];
+      let totalAmount = 0;
+
+      for (const item of validatedRequest.items) {
+        // Fetch actual product from database by name
+        const { data: product, error: productError } = await supabaseClient
+          .from('products')
+          .select('*')
+          .eq('name', item.name)
+          .eq('is_active', true)
+          .single();
+
+        if (productError || !product) {
+          logStep("ERROR: Product not found or inactive", { name: item.name });
+          throw new Error(`Product "${item.name}" not found or no longer available`);
+        }
+
+        // SECURITY: Verify price matches database (prevent client-side manipulation)
+        if (Math.abs(product.price - item.price) > 0.01) {
+          logStep("ERROR: Price mismatch detected", { 
+            productName: item.name,
+            clientPrice: item.price,
+            dbPrice: product.price 
+          });
+          throw new Error(`Price mismatch detected for "${item.name}". Please refresh and try again.`);
+        }
+
+        // SECURITY: Validate category matches
+        if (product.category !== item.category) {
+          logStep("ERROR: Category mismatch", { 
+            productName: item.name,
+            clientCategory: item.category,
+            dbCategory: product.category 
+          });
+          throw new Error(`Invalid product data for "${item.name}". Please refresh and try again.`);
+        }
+
+        lineItems.push({
+          price_data: {
+            currency: "usd",
+            product_data: { 
+              name: product.name,
+              description: product.description 
+            },
+            unit_amount: Math.round(product.price * 100),
+          },
+          quantity: item.quantity,
+        });
+
+        totalAmount += product.price * item.quantity;
+      }
+
+      sessionData = {
+        ...sessionData,
+        mode: "payment",
+        line_items: lineItems,
+      };
+
+      // Use existing order ID if provided, otherwise create new order
+      let orderId = validatedRequest.orderId;
+      if (orderId) {
+        // Verify order belongs to user and update amount
+        const { data: existingOrder, error: orderCheckError } = await supabaseClient
+          .from('orders')
+          .select('user_id, total_amount')
+          .eq('id', orderId)
+          .single();
+
+        if (orderCheckError || !existingOrder || existingOrder.user_id !== user.id) {
+          logStep("ERROR: Invalid order ID");
+          throw new Error("Invalid order ID");
+        }
+
+        // Verify total amount matches
+        if (Math.abs(existingOrder.total_amount - totalAmount) > 0.01) {
+          logStep("ERROR: Order amount mismatch", {
+            orderAmount: existingOrder.total_amount,
+            calculatedAmount: totalAmount
+          });
+          throw new Error("Order amount mismatch. Please try again.");
+        }
+      } else {
+        // Create new order
+        const { data: order, error: orderError } = await supabaseClient
+          .from('orders')
+          .insert({
+            user_id: user.id,
+            total_amount: totalAmount,
+            status: 'pending',
+            payment_method: 'stripe'
+          })
+          .select()
+          .single();
+
+        if (orderError || !order) {
+          logStep("ERROR: Failed to create order", { error: orderError });
+          throw new Error("Failed to create order");
+        }
+
+        orderId = order.id;
+      }
+
+      sessionData.metadata = {
+        order_id: orderId,
+        type: 'one_time',
+        user_id: user.id
+      };
+
+      logStep("Items validated and order prepared", { orderId, itemCount: validatedRequest.items.length, totalAmount });
+    } else if (validatedRequest.productId) {
+      // Legacy single product checkout
+      const { data: product, error: productError } = await supabaseClient
         .from('products')
         .select('*')
-        .eq('id', productId)
+        .eq('id', validatedRequest.productId)
+        .eq('is_active', true)
         .single();
 
-      if (!product) throw new Error("Product not found");
+      if (productError || !product) {
+        logStep("ERROR: Product not found or inactive");
+        throw new Error("Product not found or no longer available");
+      }
 
       sessionData = {
         ...sessionData,
@@ -119,10 +272,10 @@ serve(async (req) => {
       };
 
       // Create order record
-      const { data: order } = await supabaseClient
+      const { data: order, error: orderError } = await supabaseClient
         .from('orders')
         .insert({
-          user_id: user?.id,
+          user_id: user.id,
           total_amount: product.price,
           status: 'pending',
           payment_method: 'stripe'
@@ -130,20 +283,26 @@ serve(async (req) => {
         .select()
         .single();
 
+      if (orderError || !order) {
+        logStep("ERROR: Failed to create order", { error: orderError });
+        throw new Error("Failed to create order");
+      }
+
       sessionData.metadata = {
         order_id: order.id,
-        product_id: productId,
-        type: 'one_time'
+        product_id: validatedRequest.productId,
+        type: 'one_time',
+        user_id: user.id
       };
     } else {
-      throw new Error("Either productId or planId must be provided");
+      throw new Error("Either items, productId, or planId must be provided");
     }
 
     const session = await stripe.checkout.sessions.create(sessionData);
     logStep("Checkout session created", { sessionId: session.id });
 
     // Update order with session ID if it's a one-time payment
-    if (type !== "subscription" && sessionData.metadata?.order_id) {
+    if (validatedRequest.type !== "subscription" && sessionData.metadata?.order_id) {
       await supabaseClient
         .from('orders')
         .update({ stripe_session_id: session.id })
