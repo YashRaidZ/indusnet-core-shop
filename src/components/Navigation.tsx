@@ -78,7 +78,7 @@ const Navigation = () => {
         {/* Right Side Actions */}
         <div className="flex items-center space-x-3">
           <CartDrawer>
-            <Button variant="ghost" size="icon" className="relative group">
+            <Button variant="ghost" size="icon" className="relative group" aria-label="Shopping cart">
               <ShoppingCart className="h-5 w-5 group-hover:scale-110 transition-transform" />
               {getItemCount() > 0 && (
                 <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
@@ -129,6 +129,7 @@ const Navigation = () => {
             size="icon" 
             className="md:hidden"
             onClick={toggleMobileMenu}
+            aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
           >
             {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>
