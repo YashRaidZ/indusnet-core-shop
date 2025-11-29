@@ -49,6 +49,7 @@ const CTASection = () => {
                     size="icon" 
                     onClick={copyServerIP}
                     className="hover:bg-primary/20"
+                    aria-label="Copy server IP address"
                   >
                     <Copy className="h-4 w-4" />
                   </Button>

@@ -19,10 +19,10 @@ const Footer = () => {
               The ultimate Minecraft server experience with custom ranks, exclusive features, and an amazing community.
             </p>
             <div className="flex space-x-3">
-              <Button variant="outline" size="icon">
+              <Button variant="outline" size="icon" aria-label="Join Discord community">
                 <MessageCircle className="h-4 w-4" />
               </Button>
-              <Button variant="outline" size="icon">
+              <Button variant="outline" size="icon" aria-label="Contact via email">
                 <Mail className="h-4 w-4" />
               </Button>
             </div>
