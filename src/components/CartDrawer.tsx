@@ -117,17 +117,7 @@ export const CartDrawer = ({ children }: CartDrawerProps) => {
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
-        <div className="relative">
-          {children}
-          {itemCount > 0 && (
-            <Badge 
-              variant="destructive" 
-              className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0 flex items-center justify-center text-xs animate-in zoom-in"
-            >
-              {itemCount}
-            </Badge>
-          )}
-        </div>
+        {children}
       </SheetTrigger>
       
       <SheetContent className="w-full sm:max-w-lg bg-card border-primary/20 flex flex-col">
