@@ -9,11 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
-interface CartDrawerProps {
-  children: React.ReactNode;
-}
-
-export const CartDrawer = ({ children }: CartDrawerProps) => {
+export const CartDrawer = () => {
   const { items, updateQuantity, removeFromCart, getTotalPrice, getItemCount, loading, clearCart } = useCart();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -98,16 +94,15 @@ export const CartDrawer = ({ children }: CartDrawerProps) => {
 
   if (loading) {
     return (
-      <Sheet>
-        <SheetTrigger asChild>
-          {children}
-        </SheetTrigger>
-        <SheetContent>
-          <div className="flex items-center justify-center h-full">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          </div>
-        </SheetContent>
-      </Sheet>
+      <Button 
+        variant="ghost" 
+        size="icon" 
+        className="relative group"
+        disabled
+        aria-label="Shopping cart (loading)"
+      >
+        <Loader2 className="h-5 w-5 animate-spin" />
+      </Button>
     );
   }
 
@@ -117,7 +112,19 @@ export const CartDrawer = ({ children }: CartDrawerProps) => {
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
-        {children}
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="relative group"
+          aria-label="Shopping cart"
+        >
+          <ShoppingCart className="h-5 w-5 group-hover:scale-110 transition-transform" />
+          {itemCount > 0 && (
+            <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
+              {itemCount}
+            </span>
+          )}
+        </Button>
       </SheetTrigger>
       
       <SheetContent className="w-full sm:max-w-lg bg-card border-primary/20 flex flex-col">

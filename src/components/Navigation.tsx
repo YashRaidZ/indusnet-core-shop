@@ -1,12 +1,11 @@
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, User, Menu, X, LogOut } from "lucide-react";
+import { User, Menu, X, LogOut } from "lucide-react";
 import { useState } from "react";
 import { AuthModals } from "./AuthModals";
 import { CartDrawer } from "./CartDrawer";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
-import { useCart } from "@/contexts/CartContext";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 const Navigation = () => {
@@ -14,7 +13,6 @@ const Navigation = () => {
   const [showAuth, setShowAuth] = useState(false);
   const { user, signOut } = useAuth();
   const { isAdmin } = useUserRole();
-  const { getItemCount } = useCart();
   const { getSetting } = useSiteSettings();
   const navigate = useNavigate();
   
@@ -77,16 +75,7 @@ const Navigation = () => {
 
         {/* Right Side Actions */}
         <div className="flex items-center space-x-3">
-          <CartDrawer>
-            <Button variant="ghost" size="icon" className="relative group" aria-label="Shopping cart">
-              <ShoppingCart className="h-5 w-5 group-hover:scale-110 transition-transform" />
-              {getItemCount() > 0 && (
-                <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  {getItemCount()}
-                </span>
-              )}
-            </Button>
-          </CartDrawer>
+          <CartDrawer />
           
           {user ? (
             <div className="hidden sm:flex items-center space-x-2">
