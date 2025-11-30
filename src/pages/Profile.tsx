@@ -101,18 +101,20 @@ const Profile = () => {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-background py-8">
-      <div className="container mx-auto px-4 max-w-4xl">
-        <div className="mb-8">
+    <div className="min-h-screen bg-background py-6 sm:py-8 md:py-10">
+      <div className="container mx-auto px-4 sm:px-6 max-w-5xl">
+        <div className="mb-8 sm:mb-10 space-y-4">
           <Button 
             variant="ghost" 
             onClick={() => navigate('/dashboard')}
-            className="mb-4"
+            className="mb-2 min-h-[44px]"
           >
             ← Back to Dashboard
           </Button>
-          <h1 className="text-3xl font-bold text-foreground">Profile Settings</h1>
-          <p className="text-muted-foreground">Customize your profile and view your Minecraft skin</p>
+          <div className="space-y-2">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground">Profile Settings</h1>
+            <p className="text-sm sm:text-base md:text-lg text-muted-foreground leading-relaxed">Customize your profile and view your Minecraft skin</p>
+          </div>
         </div>
 
         <Tabs defaultValue="profile" className="space-y-6">
@@ -156,35 +158,38 @@ const Profile = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="display_name">Display Name</Label>
+                    <Label htmlFor="display_name" className="text-sm sm:text-base font-medium">Display Name</Label>
                     <Input
                       id="display_name"
                       value={formData.display_name}
                       onChange={(e) => handleInputChange('display_name', e.target.value)}
                       disabled={!isEditing}
                       placeholder="Enter your display name"
+                      className="h-12 text-base"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="minecraft_username">Minecraft Username</Label>
+                    <Label htmlFor="minecraft_username" className="text-sm sm:text-base font-medium">Minecraft Username</Label>
                     <Input
                       id="minecraft_username"
                       value={formData.minecraft_username}
                       onChange={(e) => handleMinecraftUsernameChange(e.target.value)}
                       disabled={!isEditing}
                       placeholder="Enter your Minecraft username"
+                      className="h-12 text-base"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="avatar_url">Avatar URL</Label>
+                    <Label htmlFor="avatar_url" className="text-sm sm:text-base font-medium">Avatar URL</Label>
                     <Input
                       id="avatar_url"
                       value={formData.avatar_url}
                       onChange={(e) => handleInputChange('avatar_url', e.target.value)}
                       disabled={!isEditing}
                       placeholder="Enter avatar URL or leave empty to use Minecraft skin"
+                      className="h-12 text-base"
                     />
                   </div>
 

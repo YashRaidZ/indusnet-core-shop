@@ -33,7 +33,7 @@ const Shop = () => {
   }
 
   const renderProducts = (productsList: typeof products) => (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 lg:gap-10">
       {productsList.length > 0 ? (
         productsList.map((product) => (
           <ProductCard
@@ -66,27 +66,27 @@ const Shop = () => {
       />
       <div className="min-h-screen bg-background">
         <Navigation />
-      <main className="pt-24 pb-20">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-4">
+      <main className="pt-20 sm:pt-24 pb-16 sm:pb-20">
+        <div className="container mx-auto px-4 sm:px-6">
+          <div className="text-center mb-10 sm:mb-14 space-y-4 sm:space-y-5">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-tight px-4">
               Our <span className="bg-gradient-primary bg-clip-text text-transparent">Shop</span>
             </h1>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+            <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed px-4">
               Enhance your gameplay with premium ranks, coins, and exclusive items
             </p>
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <div className="mb-8 -mx-4 px-4 overflow-x-auto">
-              <TabsList className="inline-flex w-auto min-w-full lg:grid lg:grid-cols-7 gap-2">
-                <TabsTrigger value="all" className="min-w-[80px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">All</TabsTrigger>
-                <TabsTrigger value="ranks" className="min-w-[80px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Ranks</TabsTrigger>
-                <TabsTrigger value="coins" className="min-w-[80px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Coins</TabsTrigger>
-                <TabsTrigger value="kits" className="min-w-[80px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Kits</TabsTrigger>
-                <TabsTrigger value="cosmetics" className="min-w-[100px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Cosmetics</TabsTrigger>
-                <TabsTrigger value="perks" className="min-w-[80px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Perks</TabsTrigger>
-                <TabsTrigger value="subscriptions" className="min-w-[120px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Subscriptions</TabsTrigger>
+            <div className="mb-8 sm:mb-10 -mx-4 px-4 overflow-x-auto scrollbar-hide">
+              <TabsList className="inline-flex w-auto min-w-full lg:grid lg:grid-cols-7 gap-2 p-1 bg-secondary/50 rounded-xl">
+                <TabsTrigger value="all" className="min-w-[80px] text-sm sm:text-base font-medium px-4 py-2.5 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all">All</TabsTrigger>
+                <TabsTrigger value="ranks" className="min-w-[80px] text-sm sm:text-base font-medium px-4 py-2.5 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all">Ranks</TabsTrigger>
+                <TabsTrigger value="coins" className="min-w-[80px] text-sm sm:text-base font-medium px-4 py-2.5 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all">Coins</TabsTrigger>
+                <TabsTrigger value="kits" className="min-w-[80px] text-sm sm:text-base font-medium px-4 py-2.5 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all">Kits</TabsTrigger>
+                <TabsTrigger value="cosmetics" className="min-w-[100px] text-sm sm:text-base font-medium px-4 py-2.5 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all">Cosmetics</TabsTrigger>
+                <TabsTrigger value="perks" className="min-w-[80px] text-sm sm:text-base font-medium px-4 py-2.5 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all">Perks</TabsTrigger>
+                <TabsTrigger value="subscriptions" className="min-w-[120px] text-sm sm:text-base font-medium px-4 py-2.5 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all whitespace-nowrap">Subscriptions</TabsTrigger>
               </TabsList>
             </div>
 

@@ -106,35 +106,35 @@ const ShopSection = () => {
   ];
 
   return (
-    <section id="shop" className="py-20 bg-gradient-dark">
-      <div className="container mx-auto px-4">
+    <section id="shop" className="section-spacing bg-gradient-dark">
+      <div className="container mx-auto px-4 sm:px-6">
         {/* Ranks Section */}
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+        <div className="text-center mb-12 sm:mb-16 space-y-4 sm:space-y-5">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-tight">
             Choose Your <span className="bg-gradient-primary bg-clip-text text-transparent">Rank</span>
           </h2>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed px-4">
             Unlock exclusive features, commands, and areas with our premium ranks.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8 mb-16 md:mb-20">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 sm:gap-8 lg:gap-10 mb-16 sm:mb-20 md:mb-24">
           {ranks.map((rank, index) => (
             <ProductCard key={index} {...rank} />
           ))}
         </div>
 
         {/* Coin Packs Section */}
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+        <div className="text-center mb-12 sm:mb-16 space-y-4 sm:space-y-5">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-tight">
             <span className="bg-gradient-gold bg-clip-text text-transparent">IndusCoins</span> Packs
           </h2>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed px-4">
             Get more coins to purchase items, upgrades, and exclusive content in-game.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 sm:gap-8 lg:gap-10">
           {coinPacks.map((pack, index) => (
             <ProductCard key={index} {...pack} />
           ))}
