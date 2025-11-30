@@ -55,7 +55,7 @@ const TestimonialsSection = () => {
                 <div className="flex items-center space-x-3">
                   <div className="text-2xl">{testimonial.avatar}</div>
                   <div>
-                    <h4 className="font-bold text-foreground text-sm">{testimonial.name}</h4>
+                    <p className="font-bold text-foreground text-sm">{testimonial.name}</p>
                     <p className="text-xs text-muted-foreground">{testimonial.rank}</p>
                   </div>
                 </div>
