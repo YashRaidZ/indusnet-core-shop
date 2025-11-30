@@ -20,6 +20,7 @@ import { MarketingTools } from "@/components/admin/MarketingTools";
 import { PaymentGatewaySettings } from "@/components/admin/PaymentGatewaySettings";
 import { NewsManagement } from "@/components/admin/NewsManagement";
 import { useNavigate } from "react-router-dom";
+import { maskEmail, maskUsername } from "@/lib/utils";
 import { 
   Users, 
   Package, 
@@ -798,7 +799,11 @@ export const AdminDashboard = () => {
                     {users.map((user) => (
                       <tr key={user.id} className="border-b">
                         <td className="p-2 text-xs sm:text-sm">{user.display_name || 'N/A'}</td>
-                        <td className="p-2 text-xs sm:text-sm hidden md:table-cell">{user.minecraft_username || 'N/A'}</td>
+                        <td className="p-2 text-xs sm:text-sm hidden md:table-cell">
+                          <span className="text-muted-foreground" title="Masked for privacy">
+                            {maskUsername(user.minecraft_username)}
+                          </span>
+                        </td>
                         <td className="p-2">
                           <Badge variant={user.role === 'admin' ? 'default' : 'secondary'} className="text-xs">
                             {user.role || 'user'}
@@ -1104,7 +1109,11 @@ export const AdminDashboard = () => {
                           </Badge>
                         </td>
                         <td className="p-2">{transaction.payment_method || 'N/A'}</td>
-                        <td className="p-2">{transaction.customer_email || 'N/A'}</td>
+                        <td className="p-2">
+                          <span className="text-muted-foreground" title="Masked for privacy">
+                            {maskEmail(transaction.customer_email)}
+                          </span>
+                        </td>
                         <td className="p-2">{new Date(transaction.created_at).toLocaleDateString()}</td>
                       </tr>
                     ))}
