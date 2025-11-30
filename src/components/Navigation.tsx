@@ -38,24 +38,24 @@ const Navigation = () => {
   ];
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border shadow-sm">
+      <div className="container mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
         {/* Logo */}
-        <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-gradient-primary rounded-md flex items-center justify-center animate-pulse-glow">
-            <span className="text-primary-foreground font-bold text-sm font-gaming">IN</span>
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-primary rounded-lg flex items-center justify-center animate-pulse-glow flex-shrink-0">
+            <span className="text-primary-foreground font-bold text-xs sm:text-sm font-gaming">IN</span>
           </div>
-          <span className="text-xl font-bold text-foreground font-futuristic">{websiteName}</span>
+          <span className="text-lg sm:text-xl font-bold text-foreground font-futuristic truncate">{websiteName}</span>
         </div>
 
         {/* Desktop Navigation */}
-        <div className="hidden md:flex items-center space-x-8">
+        <div className="hidden lg:flex items-center gap-6 xl:gap-8">
           {navItems.map((item) => (
             item.isLink ? (
               <Link 
                 key={item.href}
                 to={item.href} 
-                className="text-foreground hover:text-primary transition-all duration-300 relative group"
+                className="text-sm font-medium text-foreground hover:text-primary transition-all duration-300 relative group py-1"
               >
                 {item.label}
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-primary transition-all duration-300 group-hover:w-full"></span>
@@ -64,7 +64,7 @@ const Navigation = () => {
               <a 
                 key={item.href}
                 href={item.href} 
-                className="text-foreground hover:text-primary transition-all duration-300 relative group"
+                className="text-sm font-medium text-foreground hover:text-primary transition-all duration-300 relative group py-1"
               >
                 {item.label}
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-primary transition-all duration-300 group-hover:w-full"></span>
@@ -74,7 +74,7 @@ const Navigation = () => {
         </div>
 
         {/* Right Side Actions */}
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <CartDrawer />
           
           {user ? (
@@ -116,7 +116,7 @@ const Navigation = () => {
           <Button 
             variant="ghost" 
             size="icon" 
-            className="md:hidden"
+            className="lg:hidden min-w-[44px] min-h-[44px]"
             onClick={toggleMobileMenu}
             aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
           >
@@ -127,30 +127,32 @@ const Navigation = () => {
 
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
-        <div className="md:hidden bg-background/98 backdrop-blur-sm border-b border-border animate-fade-in">
-          <div className="container mx-auto px-4 py-4 space-y-4">
-            {navItems.map((item) => (
-              item.isLink ? (
-                <Link 
-                  key={item.href}
-                  to={item.href} 
-                  className="block text-foreground hover:text-primary transition-colors py-2"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  {item.label}
-                </Link>
-              ) : (
-                <a 
-                  key={item.href}
-                  href={item.href} 
-                  className="block text-foreground hover:text-primary transition-colors py-2"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  {item.label}
-                </a>
-              )
-            ))}
-            <div className="pt-4 border-t border-border space-y-3">
+        <div className="lg:hidden bg-background/98 backdrop-blur-md border-b border-border animate-fade-in">
+          <div className="container mx-auto px-4 py-6 max-h-[calc(100vh-4rem)] overflow-y-auto">
+            <div className="space-y-1">
+              {navItems.map((item) => (
+                item.isLink ? (
+                  <Link 
+                    key={item.href}
+                    to={item.href} 
+                    className="block text-base font-medium text-foreground hover:text-primary hover:bg-secondary/50 transition-all rounded-lg px-4 py-3 min-h-[48px] flex items-center"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    {item.label}
+                  </Link>
+                ) : (
+                  <a 
+                    key={item.href}
+                    href={item.href} 
+                    className="block text-base font-medium text-foreground hover:text-primary hover:bg-secondary/50 transition-all rounded-lg px-4 py-3 min-h-[48px] flex items-center"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    {item.label}
+                  </a>
+                )
+              ))}
+            </div>
+            <div className="pt-6 mt-6 border-t border-border space-y-3">
               {user ? (
                 <>
                   <Button 

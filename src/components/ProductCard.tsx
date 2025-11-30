@@ -70,40 +70,40 @@ const ProductCard = ({
   const Icon = config.icon;
 
   return (
-    <Card className="relative p-5 sm:p-6 hover:shadow-glow transition-all duration-300 hover:scale-[1.02] active:scale-100 bg-card border-border group h-full flex flex-col touch-manipulation">
+    <Card className="relative p-6 sm:p-7 md:p-8 hover:shadow-glow transition-all duration-300 hover:scale-[1.02] active:scale-100 bg-card border-border group h-full flex flex-col touch-manipulation rounded-xl">
       {popular && (
-        <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gradient-primary text-primary-foreground px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-semibold">
+        <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gradient-primary text-primary-foreground px-4 py-2 text-xs sm:text-sm font-bold shadow-lg z-10">
           Most Popular
         </Badge>
       )}
       
-      <div className="space-y-4 sm:space-y-5 flex-1 flex flex-col">
+      <div className="space-y-5 sm:space-y-6 flex-1 flex flex-col">
         {/* Header */}
-        <div className="text-center space-y-3">
-          <div className={`inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-xl ${config.badge} group-hover:scale-110 transition-transform`}>
-            <Icon className="h-7 w-7 sm:h-8 sm:w-8" />
+        <div className="text-center space-y-4">
+          <div className={`inline-flex items-center justify-center w-16 h-16 sm:w-18 sm:h-18 rounded-2xl ${config.badge} group-hover:scale-110 transition-transform shadow-md`}>
+            <Icon className="h-8 w-8 sm:h-9 sm:w-9" />
           </div>
-          <h3 className="text-xl sm:text-2xl font-bold text-foreground">{title}</h3>
-          <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">{description}</p>
+          <h3 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground leading-tight">{title}</h3>
+          <p className="text-sm sm:text-base md:text-lg text-muted-foreground leading-relaxed">{description}</p>
         </div>
 
         {/* Pricing */}
-        <div className="text-center space-y-2 py-2">
-          <div className="flex items-center justify-center space-x-3">
-            <span className="text-3xl sm:text-4xl font-bold text-foreground">{price}</span>
+        <div className="text-center space-y-2 py-3">
+          <div className="flex items-center justify-center gap-3 flex-wrap">
+            <span className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground">{price}</span>
             {originalPrice && (
-              <span className="text-lg sm:text-xl text-muted-foreground line-through">{originalPrice}</span>
+              <span className="text-xl sm:text-2xl text-muted-foreground line-through opacity-60">{originalPrice}</span>
             )}
           </div>
-          <p className="text-sm text-muted-foreground">One-time purchase</p>
+          <p className="text-sm sm:text-base text-muted-foreground font-medium">One-time purchase</p>
         </div>
 
         {/* Features */}
-        <div className="space-y-3 flex-1 py-2">
+        <div className="space-y-3 sm:space-y-4 flex-1 py-3">
           {features.map((feature, index) => (
-            <div key={index} className="flex items-start space-x-3">
-              <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0" />
-              <span className="text-sm sm:text-base text-muted-foreground leading-relaxed">{feature}</span>
+            <div key={index} className="flex items-start gap-3 sm:gap-4">
+              <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 bg-primary rounded-full mt-2 flex-shrink-0 shadow-sm" />
+              <span className="text-sm sm:text-base md:text-lg text-muted-foreground leading-relaxed font-medium">{feature}</span>
             </div>
           ))}
         </div>
@@ -112,19 +112,19 @@ const ProductCard = ({
         <Button 
           variant={config.variant} 
           size="lg" 
-          className="w-full group/btn mt-auto h-12 sm:h-14 text-base sm:text-lg font-bold touch-manipulation active:scale-95 transition-transform"
+          className="w-full group/btn mt-auto h-14 sm:h-16 text-base sm:text-lg md:text-xl font-bold touch-manipulation active:scale-95 transition-all shadow-md rounded-xl"
           onClick={handleAddToCart}
           disabled={isAdding}
         >
           {isAdding ? (
             <>
-              <Check className="h-5 w-5 sm:h-6 sm:w-6 mr-2 flex-shrink-0" />
-              <span className="truncate">Added!</span>
+              <Check className="h-6 w-6 mr-3 flex-shrink-0 animate-scale-in" />
+              <span>Added!</span>
             </>
           ) : (
             <>
-              <ShoppingCart className="h-5 w-5 sm:h-6 sm:w-6 mr-2 group-hover/btn:scale-110 transition-transform flex-shrink-0" />
-              <span className="truncate">Add to Cart</span>
+              <ShoppingCart className="h-6 w-6 mr-3 group-hover/btn:scale-110 transition-transform flex-shrink-0" />
+              <span>Add to Cart</span>
             </>
           )}
         </Button>

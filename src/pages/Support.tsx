@@ -177,18 +177,20 @@ const Support = () => {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-background py-8">
-      <div className="container mx-auto px-4 max-w-4xl">
-        <div className="mb-8">
+    <div className="min-h-screen bg-background py-6 sm:py-8 md:py-10">
+      <div className="container mx-auto px-4 sm:px-6 max-w-5xl">
+        <div className="mb-8 sm:mb-10 space-y-4">
           <Button 
             variant="ghost" 
             onClick={() => navigate('/dashboard')}
-            className="mb-4"
+            className="mb-2 min-h-[44px]"
           >
             ← Back to Dashboard
           </Button>
-          <h1 className="text-3xl font-bold text-foreground mb-2">Support Center</h1>
-          <p className="text-muted-foreground">Get help with your account, report issues, or contact our team</p>
+          <div className="space-y-2">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground">Support Center</h1>
+            <p className="text-sm sm:text-base md:text-lg text-muted-foreground leading-relaxed">Get help with your account, report issues, or contact our team</p>
+          </div>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -274,7 +276,7 @@ const Support = () => {
               <CardContent>
                 <form onSubmit={handleSubmitTicket} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="title">Title</Label>
+                    <Label htmlFor="title" className="text-sm sm:text-base font-medium">Title</Label>
                     <Input
                       id="title"
                       value={newTicket.title}
@@ -282,21 +284,22 @@ const Support = () => {
                       placeholder="Brief description of your issue"
                       maxLength={100}
                       required
+                      className="h-12 text-base"
                     />
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                       5-100 characters, letters, numbers, and common punctuation only
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                     <div className="space-y-2">
-                      <Label htmlFor="category">Category</Label>
+                      <Label htmlFor="category" className="text-sm sm:text-base font-medium">Category</Label>
                       <Select 
                         value={newTicket.category} 
                         onValueChange={(value) => setNewTicket(prev => ({ ...prev, category: value }))}
                         required
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="h-12 text-base">
                           <SelectValue placeholder="Select a category" />
                         </SelectTrigger>
                         <SelectContent>
@@ -312,12 +315,12 @@ const Support = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="priority">Priority</Label>
+                      <Label htmlFor="priority" className="text-sm sm:text-base font-medium">Priority</Label>
                       <Select 
                         value={newTicket.priority} 
                         onValueChange={(value: any) => setNewTicket(prev => ({ ...prev, priority: value }))}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="h-12 text-base">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -331,7 +334,7 @@ const Support = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="description">Description</Label>
+                    <Label htmlFor="description" className="text-sm sm:text-base font-medium">Description</Label>
                     <Textarea
                       id="description"
                       value={newTicket.description}
@@ -340,21 +343,22 @@ const Support = () => {
                       maxLength={2000}
                       rows={6}
                       required
+                      className="text-base leading-relaxed resize-none"
                     />
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                       20-2000 characters required
                     </p>
                   </div>
 
-                  <Button type="submit" disabled={submitting} className="w-full">
+                  <Button type="submit" disabled={submitting} className="w-full h-12 sm:h-14 text-base sm:text-lg font-bold mt-2">
                     {submitting ? (
                       <>
-                        <Clock className="h-4 w-4 mr-2 animate-spin" />
+                        <Clock className="h-5 w-5 mr-2 animate-spin" />
                         Submitting...
                       </>
                     ) : (
                       <>
-                        <Send className="h-4 w-4 mr-2" />
+                        <Send className="h-5 w-5 mr-2" />
                         Submit Ticket
                       </>
                     )}
