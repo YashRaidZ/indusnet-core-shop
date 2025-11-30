@@ -37,10 +37,10 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    // Get server host and port from query params or environment
-    const url = new URL(req.url);
-    const serverHost = url.searchParams.get("host") || Deno.env.get("MINECRAFT_SERVER_HOST") || "localhost";
-    const serverPort = parseInt(url.searchParams.get("port") || Deno.env.get("MINECRAFT_SERVER_PORT") || "25565");
+    // SECURITY: Only use environment variables for server configuration
+    // User-provided host/port parameters removed to prevent SSRF attacks
+    const serverHost = Deno.env.get("MINECRAFT_SERVER_HOST") || "localhost";
+    const serverPort = parseInt(Deno.env.get("MINECRAFT_SERVER_PORT") || "25565");
 
     console.log(`Checking server status for ${serverHost}:${serverPort}`);
 
